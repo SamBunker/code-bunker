@@ -152,7 +152,7 @@ CREATE TABLE settings (
 -- Insert default admin user (password: admin123)
 -- Note: This should be changed immediately after first login
 INSERT INTO users (username, email, password_hash, role, first_name, last_name) VALUES
-('admin', 'admin@company.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'System', 'Administrator');
+('admin', 'admin@company.com', '$2y$10$vBP2U0kvwdH/YjLPN/hKMeZAUvGgjG/7bpij/dKTQANJowTclUf3y', 'admin', 'System', 'Administrator');
 
 -- Insert default application settings
 INSERT INTO settings (setting_key, setting_value, setting_type, description, is_editable, category) VALUES
