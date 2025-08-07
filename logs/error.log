@@ -1,0 +1,89 @@
+[07-Aug-2025 16:05:00 America/New_York] Database Connection Error: SQLSTATE[HY000] [1049] Unknown database 'web_app_tracker'
+[07-Aug-2025 16:05:00 America/New_York] Database Connection Error: SQLSTATE[HY000] [1049] Unknown database 'web_app_tracker'
+[07-Aug-2025 16:05:11 America/New_York] Database Connection Error: SQLSTATE[HY000] [1049] Unknown database 'web_app_tracker'
+[07-Aug-2025 16:05:29 America/New_York] Database Connection Error: SQLSTATE[HY000] [1049] Unknown database 'web_app_tracker'
+[07-Aug-2025 16:05:29 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\x\htdocs\juniata\config\database.php:81
+Stack trace:
+#0 C:\x\htdocs\juniata\config\database.php(165): Database->executeQuery('SELECT * FROM u...', Array)
+#1 C:\x\htdocs\juniata\includes\auth.php(336): executeQuerySingle('SELECT * FROM u...', Array)
+#2 C:\x\htdocs\juniata\includes\auth.php(94): Auth->getUserByUsernameOrEmail('admin')
+#3 C:\x\htdocs\juniata\pages\login.php(27): Auth->login('admin', 'admin123')
+#4 {main}
+  thrown in C:\x\htdocs\juniata\config\database.php on line 81
+[07-Aug-2025 16:05:51 America/New_York] Database Connection Error: SQLSTATE[HY000] [1049] Unknown database 'web_app_tracker'
+[07-Aug-2025 16:16:30 America/New_York] PHP Warning:  require_once(C:\x\htdocs\juniata\pages/../includes/footer.php): Failed to open stream: No such file or directory in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:16:30 America/New_York] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\x\htdocs\juniata\pages/../includes/footer.php' (include_path='C:\x\php\PEAR') in C:\x\htdocs\juniata\pages\projects.php:477
+Stack trace:
+#0 {main}
+  thrown in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:16:55 America/New_York] PHP Warning:  require_once(C:\x\htdocs\juniata\pages/../includes/footer.php): Failed to open stream: No such file or directory in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:16:55 America/New_York] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\x\htdocs\juniata\pages/../includes/footer.php' (include_path='C:\x\php\PEAR') in C:\x\htdocs\juniata\pages\projects.php:477
+Stack trace:
+#0 {main}
+  thrown in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:17:41 America/New_York] PHP Warning:  require_once(C:\x\htdocs\juniata\pages/../includes/footer.php): Failed to open stream: No such file or directory in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:17:41 America/New_York] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\x\htdocs\juniata\pages/../includes/footer.php' (include_path='C:\x\php\PEAR') in C:\x\htdocs\juniata\pages\projects.php:477
+Stack trace:
+#0 {main}
+  thrown in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:20:34 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:20:34 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:20:34 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:20:34 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:20:34 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:20:47 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:20:47 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:20:47 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:20:47 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:20:47 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:22:19 America/New_York] PHP Warning:  require_once(C:\x\htdocs\juniata\pages/../includes/footer.php): Failed to open stream: No such file or directory in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:22:19 America/New_York] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\x\htdocs\juniata\pages/../includes/footer.php' (include_path='C:\x\php\PEAR') in C:\x\htdocs\juniata\pages\projects.php:477
+Stack trace:
+#0 {main}
+  thrown in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:23:19 America/New_York] PHP Warning:  require_once(C:\x\htdocs\juniata\pages/../includes/footer.php): Failed to open stream: No such file or directory in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:23:19 America/New_York] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\x\htdocs\juniata\pages/../includes/footer.php' (include_path='C:\x\php\PEAR') in C:\x\htdocs\juniata\pages\projects.php:477
+Stack trace:
+#0 {main}
+  thrown in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:23:47 America/New_York] PHP Warning:  require_once(C:\x\htdocs\juniata\pages/../includes/footer.php): Failed to open stream: No such file or directory in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:23:47 America/New_York] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\x\htdocs\juniata\pages/../includes/footer.php' (include_path='C:\x\php\PEAR') in C:\x\htdocs\juniata\pages\projects.php:477
+Stack trace:
+#0 {main}
+  thrown in C:\x\htdocs\juniata\pages\projects.php on line 477
+[07-Aug-2025 16:40:22 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:40:22 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:40:22 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:40:22 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:40:22 America/New_York] PHP Warning:  Undefined array key "days_until_due" in C:\x\htdocs\juniata\pages\tasks.php on line 359
+[07-Aug-2025 16:55:17 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:17 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:28 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:28 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:28 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:28 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:40 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:40 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:40 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:40 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:40 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:55:40 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:58:31 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:58:56 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:58:56 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:58:58 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:58:58 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:58:58 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:58:58 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:59:03 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:59:03 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\x\htdocs\juniata\includes\header.php:78) in C:\x\htdocs\juniata\pages\reports.php on line 65
+[07-Aug-2025 16:59:03 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\x\htdocs\juniata\includes\header.php:78) in C:\x\htdocs\juniata\pages\reports.php on line 66
+[07-Aug-2025 16:59:06 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:59:06 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:59:18 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:59:18 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:59:18 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:59:18 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:59:18 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 16:59:18 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 17:04:01 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ren:*)",
+      "Bash(rm:*)",
+      "Bash(php -l:*)"
+    ],
+    "deny": []
+  }
+}
