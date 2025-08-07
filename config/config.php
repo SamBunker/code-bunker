@@ -27,9 +27,9 @@ if (DEBUG_MODE) {
 
 // Application Settings
 define('APP_NAME', 'Web App Modernization Tracker');
-define('APP_VERSION', '1.0.0');
+define('APP_VERSION', '1.0.1');
 define('APP_DESCRIPTION', 'Track and manage web application modernization projects');
-define('APP_AUTHOR', 'Your Name');
+define('APP_AUTHOR', 'Samuel Bunker');
 
 // Path Constants
 define('ROOT_PATH', dirname(dirname(__FILE__)));
@@ -41,7 +41,7 @@ define('UPLOADS_PATH', ASSETS_PATH . '/uploads');
 define('API_PATH', ROOT_PATH . '/api');
 
 // URL Constants (adjust for your XAMPP setup)
-define('BASE_URL', 'http://localhost/juniata');
+define('BASE_URL', 'http://localhost/juniata/web-app-project-management/');
 define('ASSETS_URL', BASE_URL . '/assets');
 define('UPLOADS_URL', ASSETS_URL . '/uploads');
 define('API_URL', BASE_URL . '/api');

@@ -2,14 +2,14 @@
   "name": "Web Application Modernization Tracker",
   "short_name": "WebApp Tracker",
   "description": "Track and manage web application modernization projects",
-  "start_url": "/juniata/",
+  "start_url": "juniata/web-app-project-management/",
   "display": "standalone",
   "background_color": "#f8f9fa",
   "theme_color": "#0d6efd",
   "orientation": "portrait-primary",
   "categories": ["productivity", "business"],
   "lang": "en-US",
-  "scope": "/juniata/",
+  "scope": "juniata/web-app-project-management/",
   "icons": [
     {
       "src": "assets/icon-72x72.png",
@@ -59,21 +59,21 @@
       "name": "Dashboard",
       "short_name": "Dashboard", 
       "description": "View project overview",
-      "url": "/juniata/pages/dashboard.php",
+      "url": "/juniata/web-app-project-management/pages/dashboard.php",
       "icons": [{"src": "assets/shortcut-dashboard.png", "sizes": "96x96"}]
     },
     {
       "name": "Projects",
       "short_name": "Projects",
       "description": "Manage projects",
-      "url": "/juniata/pages/projects.php", 
+      "url": "/juniata/web-app-project-management/pages/projects.php", 
       "icons": [{"src": "assets/shortcut-projects.png", "sizes": "96x96"}]
     },
     {
       "name": "Tasks",
       "short_name": "Tasks",
       "description": "View and update tasks",
-      "url": "/juniata/pages/tasks.php",
+      "url": "/juniata/web-app-project-management/pages/tasks.php",
       "icons": [{"src": "assets/shortcut-tasks.png", "sizes": "96x96"}]
     }
   ]

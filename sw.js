@@ -9,12 +9,12 @@ const DYNAMIC_CACHE = 'dynamic-v1';
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
-    '/juniata/',
-    '/juniata/assets/css/style.css',
-    '/juniata/assets/js/main.min.js',
-    '/juniata/pages/dashboard.php',
-    '/juniata/pages/projects.php',
-    '/juniata/pages/tasks.php',
+    '/juniata/web-app-project-management/',
+    '/juniata/web-app-project-management/assets/css/style.css',
+    '/juniata/web-app-project-management/assets/js/main.min.js',
+    '/juniata/web-app-project-management/pages/dashboard.php',
+    '/juniata/web-app-project-management/pages/projects.php',
+    '/juniata/web-app-project-management/pages/tasks.php',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css'
 ];
@@ -96,7 +96,7 @@ self.addEventListener('fetch', event => {
             .catch(() => {
                 // Offline fallback
                 if (request.destination === 'document') {
-                    return caches.match('/juniata/pages/dashboard.php');
+                    return caches.match('/juniata/web-app-project-management/pages/dashboard.php');
                 }
             })
     );
@@ -118,8 +118,8 @@ self.addEventListener('push', event => {
         const data = event.data.json();
         const options = {
             body: data.body,
-            icon: '/juniata/assets/icon-192x192.png',
-            badge: '/juniata/assets/badge-72x72.png',
+            icon: '/juniata/web-app-project-management/assets/icon-192x192.png',
+            badge: '/juniata/web-app-project-management/assets/badge-72x72.png',
             vibrate: [100, 50, 100],
             data: {
                 dateOfArrival: Date.now(),
@@ -129,12 +129,12 @@ self.addEventListener('push', event => {
                 {
                     action: 'explore', 
                     title: 'View Details',
-                    icon: '/juniata/assets/checkmark.png'
+                    icon: '/juniata/web-app-project-management/assets/checkmark.png'
                 },
                 {
                     action: 'close', 
                     title: 'Close',
-                    icon: '/juniata/assets/xmark.png'
+                    icon: '/juniata/web-app-project-management/assets/xmark.png'
                 }
             ]
         };
@@ -151,7 +151,7 @@ self.addEventListener('notificationclick', event => {
     
     if (event.action === 'explore') {
         event.waitUntil(
-            clients.openWindow('/juniata/pages/dashboard.php')
+            clients.openWindow('/juniata/web-app-project-management/pages/dashboard.php')
         );
     }
 });

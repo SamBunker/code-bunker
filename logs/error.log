@@ -87,3 +87,11 @@ Stack trace:
 [07-Aug-2025 16:59:18 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
 [07-Aug-2025 16:59:18 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
 [07-Aug-2025 17:04:01 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'setting_type' in 'field list'
+[07-Aug-2025 18:35:36 America/New_York] PHP Fatal error:  Uncaught Error: Undefined constant "DOGGY" in C:\xampp\htdocs\juniata\web-app-project-management\pages\calendar.php:171
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\juniata\web-app-project-management\pages\calendar.php on line 171
+[07-Aug-2025 19:07:36 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\web-app-project-management\pages\projects.php on line 160
+[07-Aug-2025 19:07:36 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\web-app-project-management\pages\projects.php on line 317
+[07-Aug-2025 19:07:38 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\web-app-project-management\pages\projects.php on line 160
+[07-Aug-2025 19:07:38 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\web-app-project-management\pages\projects.php on line 317
