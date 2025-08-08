@@ -3,7 +3,9 @@
     "allow": [
       "Bash(ren:*)",
       "Bash(rm:*)",
-      "Bash(php -l:*)"
+      "Bash(php -l:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

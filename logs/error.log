@@ -95,3 +95,89 @@ Stack trace:
 [07-Aug-2025 19:07:36 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\web-app-project-management\pages\projects.php on line 317
 [07-Aug-2025 19:07:38 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\web-app-project-management\pages\projects.php on line 160
 [07-Aug-2025 19:07:38 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\web-app-project-management\pages\projects.php on line 317
+[07-Aug-2025 20:37:05 America/New_York] Database Connection Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[07-Aug-2025 20:37:05 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php:81
+Stack trace:
+#0 C:\xampp\htdocs\juniata\web-app-project-management\config\database.php(165): Database->executeQuery('SELECT \r\n      ...', Array)
+#1 C:\xampp\htdocs\juniata\web-app-project-management\includes\functions.php(559): executeQuerySingle('SELECT \r\n      ...')
+#2 C:\xampp\htdocs\juniata\web-app-project-management\pages\dashboard.php(17): getDashboardStats(NULL)
+#3 {main}
+  thrown in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php on line 81
+[07-Aug-2025 20:37:12 America/New_York] Database Connection Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[07-Aug-2025 20:37:12 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php:81
+Stack trace:
+#0 C:\xampp\htdocs\juniata\web-app-project-management\config\database.php(165): Database->executeQuery('SELECT \r\n      ...', Array)
+#1 C:\xampp\htdocs\juniata\web-app-project-management\includes\functions.php(559): executeQuerySingle('SELECT \r\n      ...')
+#2 C:\xampp\htdocs\juniata\web-app-project-management\pages\dashboard.php(17): getDashboardStats(NULL)
+#3 {main}
+  thrown in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php on line 81
+[07-Aug-2025 20:37:15 America/New_York] Database Connection Error: SQLSTATE[HY000] [2006] MySQL server has gone away
+[07-Aug-2025 20:37:15 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php:81
+Stack trace:
+#0 C:\xampp\htdocs\juniata\web-app-project-management\config\database.php(165): Database->executeQuery('SELECT \r\n      ...', Array)
+#1 C:\xampp\htdocs\juniata\web-app-project-management\includes\functions.php(559): executeQuerySingle('SELECT \r\n      ...')
+#2 C:\xampp\htdocs\juniata\web-app-project-management\pages\dashboard.php(17): getDashboardStats(NULL)
+#3 {main}
+  thrown in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php on line 81
+[07-Aug-2025 20:37:19 America/New_York] Database Connection Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[07-Aug-2025 20:37:19 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php:81
+Stack trace:
+#0 C:\xampp\htdocs\juniata\web-app-project-management\config\database.php(165): Database->executeQuery('SELECT \r\n      ...', Array)
+#1 C:\xampp\htdocs\juniata\web-app-project-management\includes\functions.php(559): executeQuerySingle('SELECT \r\n      ...')
+#2 C:\xampp\htdocs\juniata\web-app-project-management\pages\dashboard.php(17): getDashboardStats(NULL)
+#3 {main}
+  thrown in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php on line 81
+[07-Aug-2025 20:37:25 America/New_York] Database Connection Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[07-Aug-2025 20:37:25 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php:81
+Stack trace:
+#0 C:\xampp\htdocs\juniata\web-app-project-management\config\database.php(148): Database->executeQuery('SELECT p.*, \r\n ...', Array)
+#1 C:\xampp\htdocs\juniata\web-app-project-management\includes\functions.php(75): executeQuery('SELECT p.*, \r\n ...', Array)
+#2 C:\xampp\htdocs\juniata\web-app-project-management\pages\projects.php(88): getProjects(Array, 20, 0)
+#3 {main}
+  thrown in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php on line 81
+[07-Aug-2025 20:37:29 America/New_York] Database Connection Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[07-Aug-2025 20:37:29 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php:81
+Stack trace:
+#0 C:\xampp\htdocs\juniata\web-app-project-management\config\database.php(165): Database->executeQuery('SELECT \r\n      ...', Array)
+#1 C:\xampp\htdocs\juniata\web-app-project-management\includes\functions.php(559): executeQuerySingle('SELECT \r\n      ...')
+#2 C:\xampp\htdocs\juniata\web-app-project-management\pages\dashboard.php(17): getDashboardStats(NULL)
+#3 {main}
+  thrown in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php on line 81
+[07-Aug-2025 20:37:46 America/New_York] Database Connection Error: SQLSTATE[HY000] [2006] MySQL server has gone away
+[07-Aug-2025 20:37:46 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php:81
+Stack trace:
+#0 C:\xampp\htdocs\juniata\web-app-project-management\config\database.php(165): Database->executeQuery('SELECT \r\n      ...', Array)
+#1 C:\xampp\htdocs\juniata\web-app-project-management\includes\functions.php(559): executeQuerySingle('SELECT \r\n      ...')
+#2 C:\xampp\htdocs\juniata\web-app-project-management\pages\dashboard.php(17): getDashboardStats(NULL)
+#3 {main}
+  thrown in C:\xampp\htdocs\juniata\web-app-project-management\config\database.php on line 81
+[07-Aug-2025 20:44:12 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 20:54:50 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 20:58:39 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:03:13 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:03:14 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:05:07 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:06:44 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:07:42 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:08:10 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:08:17 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:08:22 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:10:51 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:12:30 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:13:08 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:13:11 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:17:25 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:18:46 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:18:57 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:21:42 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:23:32 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:24:54 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:26:23 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:26:27 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:29:08 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:31:44 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:33:25 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 21:36:18 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 22:35:27 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 22:35:29 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
+[07-Aug-2025 22:36:19 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.activity_log' doesn't exist
