@@ -1,7 +1,7 @@
-# Web Application Modernization Tracker
+# Code Bunker
 
 ## Project Overview
-A comprehensive, enterprise-grade project management system designed to track and manage web application modernization efforts. This system addresses the core needs of IT departments managing multiple legacy applications that require updates, security patches, and modernization. Features configurable tracking options for both time-focused and budget-focused project management.
+A comprehensive, enterprise-grade project management system designed to track and manage development projects securely. This system addresses the core needs of development teams managing multiple projects that require updates, security patches, and enhancements. Features configurable tracking options for both time-focused and budget-focused project management.
 
 ## Purpose
 This project showcases full-stack web development skills aligned with modern enterprise requirements:
@@ -162,7 +162,7 @@ This project showcases full-stack web development skills aligned with modern ent
 - id (INT, PRIMARY KEY, AUTO_INCREMENT)
 - name (VARCHAR(255), NOT NULL)
 - description (TEXT)
-- category (VARCHAR(100), DEFAULT 'Web Application')
+- category (VARCHAR(100), DEFAULT 'Development Project')
 - priority (ENUM: 'critical', 'high', 'medium', 'low', DEFAULT 'medium')
 - status (ENUM: 'planning', 'in_progress', 'testing', 'completed', 'on_hold', DEFAULT 'planning')
 - current_version (VARCHAR(50))
@@ -354,7 +354,7 @@ juniata/
 6. **Project Management**: Real-world application solving actual business problems
 
 ### Problem-Solving Approach
-1. **Requirements Analysis**: Identified key pain points in web app maintenance
+1. **Requirements Analysis**: Identified key pain points in development project management
 2. **Solution Architecture**: Designed scalable, maintainable system
 3. **User Experience**: Intuitive interface for non-technical users
 4. **Performance Considerations**: Efficient database queries and caching strategies
@@ -381,7 +381,7 @@ juniata/
 
 ---
 
-**Project Goal**: Demonstrate comprehensive web development skills that directly address the job requirements while solving real-world IT management challenges.
+**Project Goal**: Demonstrate comprehensive web development skills that directly address the job requirements while solving real-world development project management challenges.
 
 **Success Metrics**: 
 - Complete CRUD functionality

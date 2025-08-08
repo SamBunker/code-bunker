@@ -1,7 +1,7 @@
 <?php
 /**
  * Logout Page
- * Web Application Modernization Tracker
+ * Code Bunker
  */
 
 require_once dirname(__FILE__) . '/../includes/auth.php';

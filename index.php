@@ -1,7 +1,7 @@
 <?php
 /**
  * Entry Point
- * Web Application Modernization Tracker
+ * Code Bunker
  * 
  * Main entry point that redirects users to appropriate page
  */

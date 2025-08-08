@@ -1,7 +1,7 @@
 <?php
 /**
  * Login Page
- * Web Application Modernization Tracker
+ * Code Bunker
  */
 
 require_once dirname(__FILE__) . '/../includes/auth.php';
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="login-header">
                     <h2><i class="bi bi-kanban text-primary"></i></h2>
                     <h2><?php echo APP_NAME; ?></h2>
-                    <p class="text-muted">Track and manage web application modernization projects</p>
+                    <p class="text-muted">Secure project management for development teams</p>
                 </div>
                 
                 <!-- Display messages -->

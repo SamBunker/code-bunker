@@ -1,7 +1,7 @@
 <?php
 /**
  * Reports Page
- * Web Application Modernization Tracker
+ * Code Bunker
  * 
  * Comprehensive reporting dashboard with multiple report types and export functionality.
  */

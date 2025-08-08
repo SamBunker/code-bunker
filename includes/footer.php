@@ -1,7 +1,7 @@
 <?php
 /**
  * Common Footer Include
- * Web Application Modernization Tracker
+ * Code Bunker
  * 
  * Contains optimized JavaScript loading and performance enhancements.
  */

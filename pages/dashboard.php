@@ -1,7 +1,7 @@
 <?php
 /**
  * Dashboard Page
- * Web Application Modernization Tracker
+ * Code Bunker
  */
 
 $pageTitle = 'Dashboard';

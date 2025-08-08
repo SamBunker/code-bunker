@@ -1,7 +1,7 @@
 <?php
 /**
  * Settings Page
- * Web Application Modernization Tracker
+ * Code Bunker
  * 
  * Admin configuration panel for system-wide settings and feature toggles.
  */

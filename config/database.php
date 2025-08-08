@@ -1,7 +1,7 @@
 <?php
 /**
  * Database Connection Configuration
- * Web Application Modernization Tracker
+ * Code Bunker
  * 
  * This file handles database connections using PDO with proper error handling
  * and security measures for the XAMPP environment.

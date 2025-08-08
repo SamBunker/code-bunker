@@ -1,7 +1,7 @@
 <?php
 /**
  * Projects Management Page
- * Web Application Modernization Tracker
+ * Code Bunker
  */
 
 $pageTitle = 'Projects';
@@ -106,7 +106,7 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1><i class="bi bi-folder"></i> Projects</h1>
-        <p class="text-muted">Manage web application modernization projects</p>
+        <p class="text-muted">Manage development projects securely</p>
     </div>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#projectModal" onclick="openCreateModal()">
         <i class="bi bi-plus-lg"></i> New Project

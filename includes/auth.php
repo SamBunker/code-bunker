@@ -1,7 +1,7 @@
 <?php
 /**
  * Authentication Functions
- * Web Application Modernization Tracker
+ * Code Bunker
  * 
  * Handles user authentication, session management, and security functions.
  */

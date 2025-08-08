@@ -1,15 +1,15 @@
 {
-  "name": "Web Application Modernization Tracker",
-  "short_name": "WebApp Tracker",
-  "description": "Track and manage web application modernization projects",
-  "start_url": "juniata/web-app-project-management/",
+  "name": "Code Bunker",
+  "short_name": "Code Bunker",
+  "description": "Secure project management system for development teams",
+  "start_url": "juniata/code-bunker/",
   "display": "standalone",
   "background_color": "#f8f9fa",
   "theme_color": "#0d6efd",
   "orientation": "portrait-primary",
   "categories": ["productivity", "business"],
   "lang": "en-US",
-  "scope": "juniata/web-app-project-management/",
+  "scope": "juniata/code-bunker/",
   "icons": [
     {
       "src": "assets/icon-72x72.png",
@@ -59,21 +59,21 @@
       "name": "Dashboard",
       "short_name": "Dashboard", 
       "description": "View project overview",
-      "url": "/juniata/web-app-project-management/pages/dashboard.php",
+      "url": "/juniata/code-bunker/pages/dashboard.php",
       "icons": [{"src": "assets/shortcut-dashboard.png", "sizes": "96x96"}]
     },
     {
       "name": "Projects",
       "short_name": "Projects",
       "description": "Manage projects",
-      "url": "/juniata/web-app-project-management/pages/projects.php", 
+      "url": "/juniata/code-bunker/pages/projects.php", 
       "icons": [{"src": "assets/shortcut-projects.png", "sizes": "96x96"}]
     },
     {
       "name": "Tasks",
       "short_name": "Tasks",
       "description": "View and update tasks",
-      "url": "/juniata/web-app-project-management/pages/tasks.php",
+      "url": "/juniata/code-bunker/pages/tasks.php",
       "icons": [{"src": "assets/shortcut-tasks.png", "sizes": "96x96"}]
     }
   ]

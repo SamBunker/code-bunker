@@ -1,7 +1,7 @@
 <?php
 /**
  * Calendar View Page
- * Web Application Modernization Tracker
+ * Code Bunker
  * 
  * Interactive calendar showing project deadlines and task timelines
  */

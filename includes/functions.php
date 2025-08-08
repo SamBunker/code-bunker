@@ -1,7 +1,7 @@
 <?php
 /**
  * Common Functions
- * Web Application Modernization Tracker
+ * Code Bunker
  * 
  * Utility functions used throughout the application.
  */

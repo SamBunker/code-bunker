@@ -1,7 +1,7 @@
 <?php
 /**
  * Common Header Include
- * Web Application Modernization Tracker
+ * Code Bunker
  * 
  * Contains HTML head section and navigation for all pages.
  */
@@ -22,7 +22,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Web Application Modernization Tracker - Manage and track web application upgrade projects">
+    <meta name="description" content="Code Bunker - Secure project management system for development teams">
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?><?php echo APP_NAME; ?></title>
     
     <!-- Preconnect to external domains for faster loading -->

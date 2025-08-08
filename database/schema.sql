@@ -1,8 +1,8 @@
--- Web Application Modernization Tracker Database Schema
+-- Code Bunker Database Schema
 -- Created for XAMPP/MySQL environment
 
-CREATE DATABASE IF NOT EXISTS web_app_tracker;
-USE web_app_tracker;
+CREATE DATABASE IF NOT EXISTS code_bunker;
+USE code_bunker;
 
 -- Users table for authentication and user management
 CREATE TABLE users (
@@ -20,12 +20,12 @@ CREATE TABLE users (
     INDEX idx_email (email)
 );
 
--- Projects table for tracking web applications and modernization efforts
+-- Projects table for tracking development projects
 CREATE TABLE projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    category VARCHAR(100) DEFAULT 'Web Application',
+    category VARCHAR(100) DEFAULT 'Development Project',
     priority ENUM('critical', 'high', 'medium', 'low') DEFAULT 'medium',
     status ENUM('planning', 'in_progress', 'testing', 'completed', 'on_hold') DEFAULT 'planning',
     current_version VARCHAR(50),
@@ -164,7 +164,7 @@ INSERT INTO settings (setting_key, setting_value, setting_type, description, is_
 ('enable_file_uploads', 'true', 'boolean', 'Enable file attachments for projects/tasks', true, 'features'),
 
 -- Application settings
-('app_name', 'Web App Modernization Tracker', 'string', 'Application display name', true, 'general'),
+('app_name', 'Code Bunker', 'string', 'Application display name', true, 'general'),
 ('app_timezone', 'America/New_York', 'string', 'Default application timezone', true, 'general'),
 ('items_per_page', '20', 'number', 'Default number of items per page', true, 'general'),
 ('max_file_upload_size', '10', 'number', 'Maximum file upload size in MB', true, 'general'),

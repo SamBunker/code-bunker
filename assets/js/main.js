@@ -1,6 +1,6 @@
 /**
  * Main JavaScript Functions
- * Web Application Modernization Tracker
+ * Code Bunker
  */
 
 // Global utility functions
