@@ -6,6 +6,25 @@
  * Interactive calendar showing project deadlines and task timelines
  */
 
+// Redirect to current month/year if no parameters provided (MUST be before any output)
+if (!isset($_GET['month']) || !isset($_GET['year'])) {
+    $currentMonth = date('n');
+    $currentYear = date('Y');
+    
+    // Preserve any existing URL parameters (like debug)
+    $queryParams = $_GET;
+    $queryParams['month'] = $currentMonth;
+    $queryParams['year'] = $currentYear;
+    
+    $redirectUrl = $_SERVER['PHP_SELF'] . '?' . http_build_query($queryParams);
+    
+    // DEBUG: Log the redirect for debugging
+    error_log("Calendar redirect: " . $_SERVER['REQUEST_URI'] . " -> " . $redirectUrl);
+    
+    header('Location: ' . $redirectUrl);
+    exit();
+}
+
 $pageTitle = 'Calendar';
 require_once dirname(__FILE__) . '/../includes/header.php';
 
@@ -93,6 +112,24 @@ foreach ($calendarEvents as $event) {
         $eventsByDate[$date] = [];
     }
     $eventsByDate[$date][] = $event;
+}
+
+// Debug output - remove in production
+if (isset($_GET['debug'])) {
+    echo "<div class='alert alert-info'>";
+    echo "<h4>Debug Information</h4>";
+    echo "<p>Current Month: $currentMonth, Year: $currentYear</p>";
+    echo "<p>URL Parameters: month=" . ($_GET['month'] ?? 'not set') . ", year=" . ($_GET['year'] ?? 'not set') . "</p>";
+    echo "<p>Date Range: $startDate to $endDate</p>";
+    echo "<p>Found " . count($calendarEvents) . " events</p>";
+    echo "<p>Events by date: " . count($eventsByDate) . " dates with events</p>";
+    if (!empty($calendarEvents)) {
+        echo "<p><strong>Calendar Events Array:</strong></p>";
+        echo "<pre>" . print_r($calendarEvents, true) . "</pre>";
+    }
+    echo "<p><strong>Events by Date Array:</strong></p>";
+    echo "<pre>" . print_r($eventsByDate, true) . "</pre>";
+    echo "</div>";
 }
 
 // Get month name
@@ -209,6 +246,13 @@ $upcomingDeadlines = executeQuery($upcomingQuery) ?: [];
                      data-date="<?php echo $dateStr; ?>" 
                      onclick="showDayEvents('<?php echo $dateStr; ?>')">
                     <div class="calendar-day-number"><?php echo $day; ?></div>
+                    <?php if (isset($_GET['debug']) && !empty($events)): ?>
+                        <small class="text-info">[<?php echo count($events); ?>]</small>
+                    <?php endif; ?>
+                    <!-- DEBUG: Add visible marker for days with events -->
+                    <?php if (!empty($events)): ?>
+                        <div style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: lime; border-radius: 50%;"></div>
+                    <?php endif; ?>
                     <?php foreach (array_slice($events, 0, 3) as $event): ?>
                     <?php 
                     // Check if this is an upcoming deadline (within 7 days)
@@ -219,12 +263,16 @@ $upcomingDeadlines = executeQuery($upcomingQuery) ?: [];
                     $upcomingClass = $isUpcoming ? ' upcoming-deadline' : '';
                     ?>
                     <div class="calendar-event priority-<?php echo $event['priority']; ?><?php echo $upcomingClass; ?>" 
-                         title="<?php echo htmlspecialchars($event['title']) . ($isUpcoming ? ' (Upcoming Deadline)' : ''); ?>">
+                         title="<?php echo htmlspecialchars($event['title']) . ($isUpcoming ? ' (Upcoming Deadline)' : ''); ?>"
+                         style="<?php if (isset($_GET['debug'])): ?>background-color: red !important; color: white !important; font-weight: bold; border: 2px solid yellow;<?php endif; ?>">
                         <i class="bi bi-<?php echo $event['type'] === 'project' ? 'folder' : 'check-square'; ?>"></i>
                         <?php if ($isUpcoming): ?>
                         <i class="bi bi-exclamation-circle text-warning ms-1" style="font-size: 10px;"></i>
                         <?php endif; ?>
                         <?php echo htmlspecialchars(substr($event['title'], 0, 12) . (strlen($event['title']) > 12 ? '...' : '')); ?>
+                        <?php if (isset($_GET['debug'])): ?>
+                        <br><small>[<?php echo $event['type']; ?>]</small>
+                        <?php endif; ?>
                     </div>
                     <?php endforeach; ?>
                     
@@ -412,12 +460,51 @@ $upcomingDeadlines = executeQuery($upcomingQuery) ?: [];
 // Calendar events data (passed from PHP)
 const calendarEvents = <?php echo json_encode($calendarEvents); ?>;
 
-function navigateMonth(year, month) {
+async function navigateMonth(year, month) {
     // Ensure we maintain any existing URL parameters
     const url = new URL(window.location);
     url.searchParams.set('month', month);
     url.searchParams.set('year', year);
-    window.location.href = url.toString();
+    
+    // Debug logging
+    console.log('Navigating to:', year, month, 'without page refresh');
+    
+    // Update URL without page refresh
+    window.history.pushState({month: month, year: year}, '', url.toString());
+    
+    // Try to load new calendar data via AJAX
+    try {
+        // Add a loading indicator
+        const calendarContainer = document.querySelector('.calendar-container');
+        const originalHTML = calendarContainer.innerHTML;
+        calendarContainer.innerHTML = '<div class="text-center p-5"><i class="bi bi-hourglass-split"></i> Loading calendar...</div>';
+        
+        // Fetch new calendar data
+        const response = await fetch(url.toString());
+        if (response.ok) {
+            const html = await response.text();
+            
+            // Extract just the calendar section from the response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newCalendarContent = doc.querySelector('.calendar-container');
+            
+            if (newCalendarContent) {
+                calendarContainer.innerHTML = newCalendarContent.innerHTML;
+                console.log('Calendar updated successfully without page refresh!');
+            } else {
+                throw new Error('Calendar content not found in response');
+            }
+        } else {
+            throw new Error('Failed to load calendar data');
+        }
+    } catch (error) {
+        console.log('AJAX load failed, falling back to page reload:', error);
+        
+        // Fallback: Store scroll position and do page reload
+        sessionStorage.setItem('calendarScrollY', window.scrollY);
+        window.location.href = url.toString();
+    }
 }
 
 function showToday() {
@@ -689,37 +776,69 @@ function getPriorityColor(priority) {
     return colors[priority] || 'secondary';
 }
 
+// TEMPORARILY DISABLED ALL DOM READY JAVASCRIPT TO DEBUG NAVIGATION ISSUE
 // Add hover effects and tooltips
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Calendar loaded - Current month:', <?php echo $currentMonth; ?>, 'year:', <?php echo $currentYear; ?>);
+    console.log('URL:', window.location.href);
+    console.log('DOMContentLoaded fired - no auto-navigation should happen');
+    
+    // Restore scroll position if we navigated via calendar navigation
+    const savedScrollY = sessionStorage.getItem('calendarScrollY');
+    if (savedScrollY) {
+        console.log('Restoring scroll position to:', savedScrollY);
+        window.scrollTo(0, parseInt(savedScrollY));
+        sessionStorage.removeItem('calendarScrollY');
+    }
+    
     // Add tooltips to calendar events
     const events = document.querySelectorAll('.calendar-event');
-    events.forEach(event => {
-        new bootstrap.Tooltip(event);
+    console.log('Found calendar events:', events.length);
+    
+    // DEBUG: Let's see what calendar days have events
+    const calendarDays = document.querySelectorAll('.calendar-day');
+    console.log('Total calendar days:', calendarDays.length);
+    
+    calendarDays.forEach((day, index) => {
+        const dayEvents = day.querySelectorAll('.calendar-event');
+        const dateAttr = day.getAttribute('data-date');
+        if (dayEvents.length > 0) {
+            console.log(`Day ${dateAttr} has ${dayEvents.length} events:`, dayEvents);
+        }
     });
     
-    // Initialize upcoming deadlines toggle state
-    const showDeadlines = localStorage.getItem('showUpcomingDeadlines') !== '0';
-    const toggle = document.getElementById('showDeadlinesToggle');
-    if (toggle) {
-        toggle.checked = showDeadlines;
-        if (!showDeadlines) {
-            toggleUpcomingDeadlines();
-        }
-    }
+    // DEBUG: Check if we have the events data from PHP
+    console.log('Calendar events from PHP:', calendarEvents);
     
-    // Initialize calendar view preference
-    const savedView = localStorage.getItem('calendarView') || 'month';
-    if (savedView === 'agenda') {
-        switchView('agenda');
-    }
+    // Temporarily disabled tooltips
+    // events.forEach(event => {
+    //     new bootstrap.Tooltip(event);
+    // });
     
-    // Highlight today if it's in the current month
-    const today = new Date();
-    const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const todayCell = document.querySelector(`[data-date="${currentDate}"]`);
-    if (todayCell) {
-        todayCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    // ALL AUTO-INITIALIZATION DISABLED FOR DEBUGGING
+    
+    // // Initialize upcoming deadlines toggle state
+    // const showDeadlines = localStorage.getItem('showUpcomingDeadlines') !== '0';
+    // const toggle = document.getElementById('showDeadlinesToggle');
+    // if (toggle) {
+    //     toggle.checked = showDeadlines;
+    // }
+    
+    // // Initialize calendar view preference  
+    // const savedView = localStorage.getItem('calendarView') || 'month';
+    
+    // // Highlight today if it's in the current month - but don't auto-scroll or navigate
+    // const today = new Date();
+    // const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    // const todayCell = document.querySelector(`[data-date="${currentDate}"]`);
+    // if (todayCell) {
+    //     // Only scroll if we're viewing the current month, don't force navigation
+    //     const currentMonth = <?php echo $currentMonth; ?>;
+    //     const currentYear = <?php echo $currentYear; ?>;
+    //     if (today.getFullYear() === currentYear && (today.getMonth() + 1) === currentMonth) {
+    //         todayCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    //     }
+    // }
 });
 </script>
 
