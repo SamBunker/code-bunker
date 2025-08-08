@@ -155,6 +155,10 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                                 <i class="bi bi-key"></i> Change Password
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="https://github.com/SamBunker" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-github"></i> About Developer
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>/pages/logout.php">
                                 <i class="bi bi-box-arrow-right"></i> Logout
                             </a></li>
