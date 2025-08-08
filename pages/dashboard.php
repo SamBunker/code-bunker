@@ -121,6 +121,289 @@ if ($myTasks === false) $myTasks = [];
         </div>
     </div>
     
+    <!-- My Tasks (Duplicate) -->
+    <div class="dashboard-panel" data-panel="my-tasks-duplicate" data-panel-type="content" data-grid-x="32" data-grid-y="3" data-grid-width="12" data-grid-height="7">
+        <div class="card" style="height: 280px; max-height: 280px; overflow: hidden;">
+            <div class="card-header d-flex justify-content-between align-items-center drag-handle">
+                <i class="bi bi-grip-vertical text-white"></i>
+                <div class="panel-controls">
+                    <button class="btn btn-sm text-white" onclick="togglePanelSize(this)" title="Toggle Size">
+                        <i class="bi bi-arrows-angle-expand panel-size-icon"></i>
+                    </button>
+                    <button class="btn btn-sm text-white" onclick="removePanel(this)" title="Remove Panel">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person-check"></i> My Tasks
+                    </h5>
+                    <a href="<?php echo BASE_URL; ?>/pages/tasks.php" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div style="max-height: 180px; overflow-y: auto;">
+                <?php if (empty($myTasks)): ?>
+                <div class="text-center p-4">
+                    <i class="bi bi-list-check fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">No tasks assigned to you</p>
+                </div>
+                <?php else: ?>
+                <div class="list-group list-group-flush">
+                    <?php 
+                    $displayTasks = array_slice($myTasks, 0, 8); // Show max 8 tasks
+                    foreach ($displayTasks as $task): 
+                    ?>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1"><?php echo htmlspecialchars($task['title']); ?></h6>
+                                <p class="mb-1 text-muted small"><?php echo htmlspecialchars($task['project_name']); ?></p>
+                                <small>
+                                    <?php echo getStatusBadge($task['status'], 'task'); ?>
+                                    <?php echo getPriorityBadge($task['priority']); ?>
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <?php if ($task['due_date']): ?>
+                                    <small class="text-muted d-block">
+                                        <?php 
+                                        $daysUntilDue = $task['days_until_due'];
+                                        if ($daysUntilDue < 0) {
+                                            echo '<span class="text-danger">Overdue</span>';
+                                        } elseif ($daysUntilDue == 0) {
+                                            echo '<span class="badge bg-warning text-dark">Due today</span>';
+                                        } elseif ($daysUntilDue <= 3) {
+                                            echo '<span class="badge bg-warning text-dark">' . $daysUntilDue . ' days</span>';
+                                        } else {
+                                            echo $daysUntilDue . ' days';
+                                        }
+                                        ?>
+                                    </small>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Projects (Duplicate) -->
+    <div class="dashboard-panel" data-panel="recent-projects-duplicate" data-panel-type="content" data-grid-x="0" data-grid-y="12" data-grid-width="20" data-grid-height="12">
+        <div class="card" style="height: 480px; max-height: 480px; overflow: hidden;">
+            <div class="card-header d-flex justify-content-between align-items-center drag-handle">
+                <i class="bi bi-grip-vertical text-white"></i>
+                <div class="panel-controls">
+                    <button class="btn btn-sm text-white" onclick="togglePanelSize(this)" title="Toggle Size">
+                        <i class="bi bi-arrows-angle-expand panel-size-icon"></i>
+                    </button>
+                    <button class="btn btn-sm text-white" onclick="removePanel(this)" title="Remove Panel">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Projects
+                    </h5>
+                    <a href="<?php echo BASE_URL; ?>/pages/projects.php" class="btn btn-sm btn-outline-primary">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <?php if (empty($recentProjects)): ?>
+                <div class="text-center p-4">
+                    <i class="bi bi-folder-x fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">No projects found</p>
+                    <a href="<?php echo BASE_URL; ?>/pages/projects.php?action=create" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> Create First Project
+                    </a>
+                </div>
+                <?php else: ?>
+                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Due Date</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recentProjects as $project): ?>
+                            <tr>
+                                <td>
+                                    <strong><?php echo htmlspecialchars($project['name']); ?></strong>
+                                    <br><small class="text-muted"><?php echo htmlspecialchars($project['category']); ?></small>
+                                </td>
+                                <td><?php echo getStatusBadge($project['status'], 'project'); ?></td>
+                                <td><?php echo getPriorityBadge($project['priority']); ?></td>
+                                <td>
+                                    <?php if ($project['due_date']): ?>
+                                        <?php echo formatDate($project['due_date']); ?>
+                                        <?php if ($project['due_date'] < date('Y-m-d') && $project['status'] !== 'completed'): ?>
+                                            <i class="bi bi-exclamation-triangle text-danger ms-1" title="Overdue"></i>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="text-muted">Not set</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="width: 120px;">
+                                    <?php $progress = ($project['total_tasks'] > 0) ? round(($project['completed_tasks'] / $project['total_tasks']) * 100) : 0; ?>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar" role="progressbar" style="width: <?php echo $progress; ?>%" 
+                                             aria-valuenow="<?php echo $progress; ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted"><?php echo $progress; ?>%</small>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upcoming Deadlines (Duplicate) -->
+    <div class="dashboard-panel" data-panel="upcoming-deadlines-duplicate" data-panel-type="content" data-grid-x="22" data-grid-y="12" data-grid-width="15" data-grid-height="12">
+        <div class="card border-start-warning" style="height: 480px; max-height: 480px; overflow: hidden;">
+            <div class="card-header d-flex justify-content-between align-items-center drag-handle">
+                <i class="bi bi-grip-vertical text-white"></i>
+                <div class="panel-controls">
+                    <button class="btn btn-sm text-white" onclick="togglePanelSize(this)" title="Toggle Size">
+                        <i class="bi bi-arrows-angle-expand panel-size-icon"></i>
+                    </button>
+                    <button class="btn btn-sm text-white" onclick="removePanel(this)" title="Remove Panel">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-event text-warning"></i> Upcoming Deadlines (Next 7 Days)
+                    </h5>
+                </div>
+                <?php if (!empty($stats['upcoming_deadlines'])): ?>
+                <div class="list-group list-group-flush" style="max-height: 380px; overflow-y: auto;">
+                    <?php 
+                    $displayDeadlines = array_slice($stats['upcoming_deadlines'], 0, 8); // Show max 8 deadlines
+                    foreach ($displayDeadlines as $deadline): 
+                    ?>
+                    <div class="list-group-item border-start border-warning border-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1"><?php echo htmlspecialchars($deadline['name']); ?></h6>
+                                <p class="mb-1">
+                                    <?php echo getStatusBadge($deadline['status'], 'project'); ?>
+                                    <?php echo getPriorityBadge($deadline['priority']); ?>
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted d-block">
+                                    Due: <?php echo formatDate($deadline['due_date']); ?>
+                                </small>
+                                <?php 
+                                $daysUntilDue = (strtotime($deadline['due_date']) - strtotime(date('Y-m-d'))) / (60 * 60 * 24);
+                                if ($daysUntilDue < 0): ?>
+                                    <span class="badge bg-danger">Overdue</span>
+                                <?php elseif ($daysUntilDue == 0): ?>
+                                    <span class="badge bg-warning text-dark">Due Today</span>
+                                <?php elseif ($daysUntilDue <= 3): ?>
+                                    <span class="badge bg-warning text-dark"><?php echo $daysUntilDue; ?> days</span>
+                                <?php else: ?>
+                                    <span class="badge bg-info"><?php echo $daysUntilDue; ?> days</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php else: ?>
+                <div class="text-center p-4">
+                    <i class="bi bi-calendar-check fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">No upcoming deadlines</p>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity (Duplicate) -->
+    <div class="dashboard-panel" data-panel="recent-activity-duplicate" data-panel-type="content" data-grid-x="38" data-grid-y="12" data-grid-width="15" data-grid-height="12">
+        <div class="card" style="height: 480px; max-height: 480px; overflow: hidden;">
+            <div class="card-header d-flex justify-content-between align-items-center drag-handle">
+                <i class="bi bi-grip-vertical text-white"></i>
+                <div class="panel-controls">
+                    <button class="btn btn-sm text-white" onclick="togglePanelSize(this)" title="Toggle Size">
+                        <i class="bi bi-arrows-angle-expand panel-size-icon"></i>
+                    </button>
+                    <button class="btn btn-sm text-white" onclick="removePanel(this)" title="Remove Panel">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="p-3 border-bottom">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-activity"></i> Recent Activity
+                    </h5>
+                </div>
+                <?php if (!empty($stats['recent_activity'])): ?>
+                <div style="max-height: 380px; overflow-y: auto;">
+                    <?php foreach ($stats['recent_activity'] as $activity): ?>
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <?php
+                            $icon = 'bi-circle';
+                            switch ($activity['action']) {
+                                case 'create': $icon = 'bi-plus-lg'; break;
+                                case 'update': $icon = 'bi-pencil'; break;
+                                case 'delete': $icon = 'bi-trash'; break;
+                                case 'login': $icon = 'bi-box-arrow-in-right'; break;
+                                case 'logout': $icon = 'bi-box-arrow-left'; break;
+                            }
+                            ?>
+                            <i class="bi <?php echo $icon; ?>"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">
+                                <?php echo htmlspecialchars($activity['user_name']); ?>
+                                <?php echo ucfirst($activity['action']) . 'd'; ?>
+                                <?php echo $activity['entity_type']; ?>
+                            </div>
+                            <?php if ($activity['description']): ?>
+                            <div class="activity-description">
+                                <?php echo htmlspecialchars($activity['description']); ?>
+                            </div>
+                            <?php endif; ?>
+                            <div class="activity-meta">
+                                <?php echo formatDateTime($activity['created_at']); ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php else: ?>
+                <div class="text-center p-4">
+                    <i class="bi bi-activity fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">No recent activity</p>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
     <div class="dashboard-panel" data-panel="completed-projects" data-panel-type="stat-card" data-grid-x="8" data-grid-y="3" data-grid-width="7" data-grid-height="5">
         <div class="card dashboard-card success">
             <div class="card-header d-flex justify-content-between align-items-center drag-handle">
@@ -238,240 +521,7 @@ if ($myTasks === false) $myTasks = [];
     </div>
 </div>
 
-    <!-- Recent Projects -->
-    <div class="dashboard-panel" data-panel="recent-projects" data-panel-type="content" data-grid-x="0" data-grid-y="10" data-grid-width="20" data-grid-height="8">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center drag-handle">
-                <i class="bi bi-grip-vertical"></i>
-                <div class="panel-controls">
-                    <button class="btn btn-sm" onclick="togglePanelSize(this)" title="Toggle Size">
-                        <i class="bi bi-arrows-angle-expand panel-size-icon"></i>
-                    </button>
-                    <button class="btn btn-sm" onclick="removePanel(this)" title="Remove Panel">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-clock-history"></i> Recent Projects
-                    </h5>
-                    <a href="<?php echo BASE_URL; ?>/pages/projects.php" class="btn btn-sm btn-outline-primary">
-                        View All <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-                <?php if (empty($recentProjects)): ?>
-                <div class="text-center p-4">
-                    <i class="bi bi-folder-x fs-1 text-muted"></i>
-                    <p class="text-muted mt-2">No projects found</p>
-                    <a href="<?php echo BASE_URL; ?>/pages/projects.php?action=create" class="btn btn-primary">
-                        <i class="bi bi-plus-lg"></i> Create First Project
-                    </a>
-                </div>
-                <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Project Name</th>
-                                <th>Status</th>
-                                <th>Priority</th>
-                                <th>Due Date</th>
-                                <th>Progress</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($recentProjects as $project): ?>
-                            <tr>
-                                <td>
-                                    <strong><?php echo htmlspecialchars($project['name']); ?></strong>
-                                    <br><small class="text-muted"><?php echo htmlspecialchars($project['category']); ?></small>
-                                </td>
-                                <td><?php echo getStatusBadge($project['status'], 'project'); ?></td>
-                                <td><?php echo getPriorityBadge($project['priority']); ?></td>
-                                <td>
-                                    <?php if ($project['due_date']): ?>
-                                        <?php echo formatDate($project['due_date']); ?>
-                                        <?php if ($project['due_date'] < date('Y-m-d') && $project['status'] !== 'completed'): ?>
-                                            <i class="bi bi-exclamation-triangle text-danger ms-1" title="Overdue"></i>
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <span class="text-muted">Not set</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="width: 120px;">
-                                    <?php $progress = ($project['total_tasks'] > 0) ? round(($project['completed_tasks'] / $project['total_tasks']) * 100) : 0; ?>
-                                    <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar" role="progressbar" style="width: <?php echo $progress; ?>%" 
-                                             aria-valuenow="<?php echo $progress; ?>" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <small class="text-muted"><?php echo $progress; ?>%</small>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-    
-    <!-- My Tasks -->
-    <div class="dashboard-panel" data-panel="my-tasks" data-panel-type="content" data-grid-x="21" data-grid-y="10" data-grid-width="12" data-grid-height="8">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center drag-handle">
-                <i class="bi bi-grip-vertical"></i>
-                <div class="panel-controls">
-                    <button class="btn btn-sm" onclick="togglePanelSize(this)" title="Toggle Size">
-                        <i class="bi bi-arrows-angle-expand panel-size-icon"></i>
-                    </button>
-                    <button class="btn btn-sm" onclick="removePanel(this)" title="Remove Panel">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-person-check"></i> My Tasks
-                    </h5>
-                    <a href="<?php echo BASE_URL; ?>/pages/tasks.php" class="btn btn-sm btn-outline-primary">
-                        View All
-                    </a>
-                </div>
-                <div style="max-height: 400px; overflow-y: auto;">
-                <?php if (empty($myTasks)): ?>
-                <div class="text-center p-4">
-                    <i class="bi bi-list-check fs-1 text-muted"></i>
-                    <p class="text-muted mt-2">No tasks assigned to you</p>
-                </div>
-                <?php else: ?>
-                <div class="list-group list-group-flush">
-                    <?php 
-                    $displayTasks = array_slice($myTasks, 0, 8); // Show max 8 tasks
-                    foreach ($displayTasks as $task): 
-                    ?>
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-1"><?php echo htmlspecialchars($task['title']); ?></h6>
-                                <p class="mb-1 text-muted small"><?php echo htmlspecialchars($task['project_name']); ?></p>
-                                <small>
-                                    <?php echo getStatusBadge($task['status'], 'task'); ?>
-                                    <?php echo getPriorityBadge($task['priority']); ?>
-                                </small>
-                            </div>
-                            <div class="text-end">
-                                <?php if ($task['due_date']): ?>
-                                    <small class="text-muted d-block">
-                                        <?php 
-                                        $daysUntilDue = $task['days_until_due'];
-                                        if ($daysUntilDue < 0) {
-                                            echo '<span class="text-danger">Overdue</span>';
-                                        } elseif ($daysUntilDue == 0) {
-                                            echo '<span class="badge bg-warning text-dark">Due today</span>';
-                                        } elseif ($daysUntilDue <= 3) {
-                                            echo '<span class="badge bg-warning text-dark">' . $daysUntilDue . ' days</span>';
-                                        } else {
-                                            echo $daysUntilDue . ' days';
-                                        }
-                                        ?>
-                                    </small>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
 
-<!-- Upcoming Deadlines -->
-<?php if (!empty($stats['upcoming_deadlines'])): ?>
-<div class="row">
-    <div class="col-12 mb-4">
-        <div class="card border-start-warning">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-calendar-event text-warning"></i> Upcoming Deadlines (Next 7 Days)
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <?php foreach ($stats['upcoming_deadlines'] as $deadline): ?>
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="card-title"><?php echo htmlspecialchars($deadline['name']); ?></h6>
-                                <p class="card-text">
-                                    <small class="text-muted">Due: <?php echo formatDate($deadline['due_date']); ?></small><br>
-                                    <?php echo getStatusBadge($deadline['status'], 'project'); ?>
-                                    <?php echo getPriorityBadge($deadline['priority']); ?>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- Recent Activity -->
-<?php if (!empty($stats['recent_activity'])): ?>
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-activity"></i> Recent Activity
-                </h5>
-            </div>
-            <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
-                <?php foreach ($stats['recent_activity'] as $activity): ?>
-                <div class="activity-item">
-                    <div class="activity-icon">
-                        <?php
-                        $icon = 'bi-circle';
-                        switch ($activity['action']) {
-                            case 'create': $icon = 'bi-plus-lg'; break;
-                            case 'update': $icon = 'bi-pencil'; break;
-                            case 'delete': $icon = 'bi-trash'; break;
-                            case 'login': $icon = 'bi-box-arrow-in-right'; break;
-                            case 'logout': $icon = 'bi-box-arrow-left'; break;
-                        }
-                        ?>
-                        <i class="bi <?php echo $icon; ?>"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">
-                            <?php echo htmlspecialchars($activity['user_name']); ?>
-                            <?php echo ucfirst($activity['action']) . 'd'; ?>
-                            <?php echo $activity['entity_type']; ?>
-                        </div>
-                        <?php if ($activity['description']): ?>
-                        <div class="activity-description">
-                            <?php echo htmlspecialchars($activity['description']); ?>
-                        </div>
-                        <?php endif; ?>
-                        <div class="activity-meta">
-                            <?php echo formatDateTime($activity['created_at']); ?>
-                        </div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
 
 </div> <!-- End dashboard-container -->
 
