@@ -28,8 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'category' => sanitizeInput($_POST['category']),
                 'priority' => sanitizeInput($_POST['priority']),
                 'status' => sanitizeInput($_POST['status']),
-                'current_version' => sanitizeInput($_POST['current_version']),
-                'target_version' => sanitizeInput($_POST['target_version']),
                 'start_date' => $_POST['start_date'] ?: null,
                 'due_date' => $_POST['due_date'] ?: null,
                 'estimated_hours' => floatval($_POST['estimated_hours']),
@@ -51,8 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'category' => sanitizeInput($_POST['category']),
                 'priority' => sanitizeInput($_POST['priority']),
                 'status' => sanitizeInput($_POST['status']),
-                'current_version' => sanitizeInput($_POST['current_version']),
-                'target_version' => sanitizeInput($_POST['target_version']),
                 'start_date' => $_POST['start_date'] ?: null,
                 'due_date' => $_POST['due_date'] ?: null,
                 'estimated_hours' => floatval($_POST['estimated_hours']),
@@ -218,7 +214,7 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
                 </thead>
                 <tbody>
                     <?php foreach ($projects as $project): ?>
-                    <tr>
+                    <tr class="clickable-row" data-href="project_view.php?id=<?php echo $project['id']; ?>" style="cursor: pointer;">
                         <td>
                             <div>
                                 <h6 class="mb-1"><?php echo htmlspecialchars($project['name']); ?></h6>
@@ -342,7 +338,7 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
                             </select>
                         </div>
                         
-                        <div class="col-md-6">
+                        <!-- <div class="col-md-6">
                             <label for="current_version" class="form-label">Current Version</label>
                             <input type="text" class="form-control" id="current_version" name="current_version" placeholder="e.g., PHP 5.6">
                         </div>
@@ -350,7 +346,7 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
                         <div class="col-md-6">
                             <label for="target_version" class="form-label">Target Version</label>
                             <input type="text" class="form-control" id="target_version" name="target_version" placeholder="e.g., PHP 8.2">
-                        </div>
+                        </div> -->
                         
                         <div class="col-md-4">
                             <label for="start_date" class="form-label">Start Date</label>
@@ -448,6 +444,21 @@ document.querySelector('[data-search]')?.addEventListener('input', function() {
     searchTimeout = setTimeout(() => {
         document.getElementById('filterForm').submit();
     }, 500);
+});
+
+// Handle clickable rows
+document.querySelectorAll('.clickable-row').forEach(row => {
+    row.addEventListener('click', function(e) {
+        // Don't trigger if clicking on action buttons
+        if (e.target.closest('.btn-group') || e.target.closest('button') || e.target.closest('a')) {
+            return;
+        }
+        
+        const href = this.dataset.href;
+        if (href) {
+            window.location.href = href;
+        }
+    });
 });
 
 <?php if ($currentAction === 'create' || $currentAction === 'edit'): ?>

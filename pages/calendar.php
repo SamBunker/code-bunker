@@ -47,6 +47,9 @@ if ($nextMonth > 12) {
 $startDate = date('Y-m-01', mktime(0, 0, 0, $currentMonth, 1, $currentYear));
 $endDate = date('Y-m-t', mktime(0, 0, 0, $currentMonth, 1, $currentYear));
 
+// Also include upcoming deadlines from next month to ensure they're visible
+$extendedEndDate = date('Y-m-t', mktime(0, 0, 0, $currentMonth + 1, 1, $currentYear));
+
 // Get projects and tasks for the current month
 $calendarQuery = "
     SELECT 
@@ -78,6 +81,9 @@ $calendarQuery = "
 ";
 
 $calendarEvents = executeQuery($calendarQuery, [$startDate, $endDate, $startDate, $endDate]) ?: [];
+
+// Also get upcoming deadlines to show on sidebar
+$upcomingEvents = executeQuery($calendarQuery, [date('Y-m-d'), $extendedEndDate, date('Y-m-d'), $extendedEndDate]) ?: [];
 
 // Group events by date
 $eventsByDate = [];
@@ -204,10 +210,21 @@ $upcomingDeadlines = executeQuery($upcomingQuery) ?: [];
                      onclick="showDayEvents('<?php echo $dateStr; ?>')">
                     <div class="calendar-day-number"><?php echo $day; ?></div>
                     <?php foreach (array_slice($events, 0, 3) as $event): ?>
-                    <div class="calendar-event priority-<?php echo $event['priority']; ?>" 
-                         title="<?php echo htmlspecialchars($event['title']); ?>">
+                    <?php 
+                    // Check if this is an upcoming deadline (within 7 days)
+                    $eventDate = new DateTime($event['date']);
+                    $today = new DateTime();
+                    $futureDate = new DateTime('+7 days');
+                    $isUpcoming = ($eventDate >= $today && $eventDate <= $futureDate);
+                    $upcomingClass = $isUpcoming ? ' upcoming-deadline' : '';
+                    ?>
+                    <div class="calendar-event priority-<?php echo $event['priority']; ?><?php echo $upcomingClass; ?>" 
+                         title="<?php echo htmlspecialchars($event['title']) . ($isUpcoming ? ' (Upcoming Deadline)' : ''); ?>">
                         <i class="bi bi-<?php echo $event['type'] === 'project' ? 'folder' : 'check-square'; ?>"></i>
-                        <?php echo htmlspecialchars(substr($event['title'], 0, 15) . (strlen($event['title']) > 15 ? '...' : '')); ?>
+                        <?php if ($isUpcoming): ?>
+                        <i class="bi bi-exclamation-circle text-warning ms-1" style="font-size: 10px;"></i>
+                        <?php endif; ?>
+                        <?php echo htmlspecialchars(substr($event['title'], 0, 12) . (strlen($event['title']) > 12 ? '...' : '')); ?>
                     </div>
                     <?php endforeach; ?>
                     
@@ -238,19 +255,27 @@ $upcomingDeadlines = executeQuery($upcomingQuery) ?: [];
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-center mb-2">
-                            <div class="calendar-event priority-critical me-2" style="width: 20px; height: 16px;"></div>
+                            <div class="calendar-event priority-critical me-2 d-flex align-items-center justify-content-center" style="width: 20px; height: 16px;">
+                                <i class="bi bi-exclamation-triangle" style="font-size: 10px;"></i>
+                            </div>
                             <span>Critical Priority</span>
                         </div>
                         <div class="d-flex align-items-center mb-2">
-                            <div class="calendar-event priority-high me-2" style="width: 20px; height: 16px;"></div>
+                            <div class="calendar-event priority-high me-2 d-flex align-items-center justify-content-center" style="width: 20px; height: 16px;">
+                                <i class="bi bi-chevron-up" style="font-size: 10px;"></i>
+                            </div>
                             <span>High Priority</span>
                         </div>
                         <div class="d-flex align-items-center mb-2">
-                            <div class="calendar-event priority-medium me-2" style="width: 20px; height: 16px;"></div>
+                            <div class="calendar-event priority-medium me-2 d-flex align-items-center justify-content-center" style="width: 20px; height: 16px;">
+                                <i class="bi bi-dash" style="font-size: 10px;"></i>
+                            </div>
                             <span>Medium Priority</span>
                         </div>
                         <div class="d-flex align-items-center">
-                            <div class="calendar-event priority-low me-2" style="width: 20px; height: 16px;"></div>
+                            <div class="calendar-event priority-low me-2 d-flex align-items-center justify-content-center" style="width: 20px; height: 16px;">
+                                <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
+                            </div>
                             <span>Low Priority</span>
                         </div>
                     </div>
@@ -262,10 +287,16 @@ $upcomingDeadlines = executeQuery($upcomingQuery) ?: [];
     <!-- Upcoming Deadlines -->
     <div class="col-lg-4">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-clock"></i> Upcoming Deadlines
                 </h5>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="showDeadlinesToggle" checked onchange="toggleUpcomingDeadlines()">
+                    <label class="form-check-label" for="showDeadlinesToggle">
+                        Show on calendar
+                    </label>
+                </div>
             </div>
             <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
                 <?php if (empty($upcomingDeadlines)): ?>
@@ -350,7 +381,8 @@ $upcomingDeadlines = executeQuery($upcomingQuery) ?: [];
                     <?php for ($month = 1; $month <= 12; $month++): ?>
                     <div class="col-4">
                         <button class="btn btn-outline-secondary btn-sm w-100 <?php echo $month === $currentMonth ? 'active' : ''; ?>"
-                                onclick="navigateMonth(<?php echo $currentYear; ?>, <?php echo $month; ?>)">
+                                onclick="navigateMonth(<?php echo $currentYear; ?>, <?php echo $month; ?>)"
+                                data-month="<?php echo $month; ?>">
                             <?php echo date('M', mktime(0, 0, 0, $month, 1)); ?>
                         </button>
                     </div>
@@ -381,7 +413,11 @@ $upcomingDeadlines = executeQuery($upcomingQuery) ?: [];
 const calendarEvents = <?php echo json_encode($calendarEvents); ?>;
 
 function navigateMonth(year, month) {
-    window.location.href = `?month=${month}&year=${year}`;
+    // Ensure we maintain any existing URL parameters
+    const url = new URL(window.location);
+    url.searchParams.set('month', month);
+    url.searchParams.set('year', year);
+    window.location.href = url.toString();
 }
 
 function showToday() {
@@ -442,8 +478,148 @@ function showDayEvents(date) {
 }
 
 function switchView(view) {
-    // For future implementation of different calendar views
-    console.log('Switch to', view, 'view');
+    const calendarGrid = document.querySelector('.calendar-grid').parentElement;
+    
+    if (view === 'agenda') {
+        showAgendaView();
+    } else {
+        showMonthView();
+    }
+    
+    // Update view button text
+    const viewButton = document.querySelector('.dropdown-toggle');
+    if (view === 'agenda') {
+        viewButton.innerHTML = '<i class="bi bi-list-ul"></i> Agenda View';
+    } else {
+        viewButton.innerHTML = '<i class="bi bi-calendar-month"></i> Month View';
+    }
+    
+    // Save view preference
+    localStorage.setItem('calendarView', view);
+}
+
+function showAgendaView() {
+    const calendarContainer = document.querySelector('.calendar-container');
+    const calendarGrid = calendarContainer.querySelector('.calendar-grid').parentElement;
+    
+    // Hide calendar grid
+    calendarGrid.style.display = 'none';
+    
+    // Create agenda view if it doesn't exist
+    let agendaView = calendarContainer.querySelector('.agenda-view');
+    if (!agendaView) {
+        agendaView = document.createElement('div');
+        agendaView.className = 'agenda-view';
+        agendaView.innerHTML = generateAgendaHTML();
+        calendarContainer.appendChild(agendaView);
+    }
+    
+    // Show agenda view
+    agendaView.style.display = 'block';
+}
+
+function showMonthView() {
+    const calendarContainer = document.querySelector('.calendar-container');
+    const calendarGrid = calendarContainer.querySelector('.calendar-grid').parentElement;
+    const agendaView = calendarContainer.querySelector('.agenda-view');
+    
+    // Show calendar grid
+    calendarGrid.style.display = 'block';
+    
+    // Hide agenda view
+    if (agendaView) {
+        agendaView.style.display = 'none';
+    }
+}
+
+function generateAgendaHTML() {
+    // Sort events by date
+    const sortedEvents = [...calendarEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    if (sortedEvents.length === 0) {
+        return '<div class="text-center p-4"><i class="bi bi-calendar-x fs-1 text-muted"></i><p class="text-muted mt-2">No events this month</p></div>';
+    }
+    
+    let html = '<div class="list-group list-group-flush">';
+    let currentDate = '';
+    
+    sortedEvents.forEach(event => {
+        const eventDate = new Date(event.date);
+        const dateStr = eventDate.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        // Add date header if different from previous
+        if (dateStr !== currentDate) {
+            if (currentDate !== '') {
+                html += '</div></div>'; // Close previous day's events
+            }
+            html += `<div class="agenda-date-group">
+                        <h6 class="agenda-date-header bg-light p-2 mb-0">${dateStr}</h6>
+                        <div class="agenda-events">`;
+            currentDate = dateStr;
+        }
+        
+        const icon = event.type === 'project' ? 'folder' : 'check-square';
+        const priorityClass = `priority-${event.priority}`;
+        
+        html += `
+            <div class="list-group-item agenda-event-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="agenda-event-content">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-${icon} me-2"></i>
+                            <h6 class="mb-0">${escapeHtml(event.title)}</h6>
+                            <span class="badge bg-${getPriorityColor(event.priority)} ms-2">${event.priority}</span>
+                        </div>
+                        <p class="text-muted mb-0 small">${escapeHtml(event.description || '')}</p>
+                    </div>
+                    <div class="agenda-event-type">
+                        <span class="badge bg-${event.type === 'project' ? 'primary' : 'info'}">${event.type}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (currentDate !== '') {
+        html += '</div></div>'; // Close last day's events
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function toggleUpcomingDeadlines() {
+    const toggle = document.getElementById('showDeadlinesToggle');
+    const calendarEvents = document.querySelectorAll('.calendar-event');
+    
+    // Save the toggle state
+    localStorage.setItem('showUpcomingDeadlines', toggle.checked ? '1' : '0');
+    
+    // Show/hide events on calendar based on toggle
+    calendarEvents.forEach(event => {
+        if (toggle.checked) {
+            event.style.display = 'block';
+        } else {
+            // Only hide if it's an upcoming deadline (could be enhanced with better detection)
+            const today = new Date();
+            const eventDate = new Date(event.closest('.calendar-day').dataset.date);
+            const daysDiff = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff >= 0 && daysDiff <= 30) {
+                event.style.display = 'none';
+            }
+        }
+    });
+    
+    AppTracker.showToast(
+        toggle.checked ? 'Upcoming deadlines shown on calendar' : 'Upcoming deadlines hidden from calendar',
+        'info'
+    );
 }
 
 function escapeHtml(text) {
@@ -520,6 +696,22 @@ document.addEventListener('DOMContentLoaded', function() {
     events.forEach(event => {
         new bootstrap.Tooltip(event);
     });
+    
+    // Initialize upcoming deadlines toggle state
+    const showDeadlines = localStorage.getItem('showUpcomingDeadlines') !== '0';
+    const toggle = document.getElementById('showDeadlinesToggle');
+    if (toggle) {
+        toggle.checked = showDeadlines;
+        if (!showDeadlines) {
+            toggleUpcomingDeadlines();
+        }
+    }
+    
+    // Initialize calendar view preference
+    const savedView = localStorage.getItem('calendarView') || 'month';
+    if (savedView === 'agenda') {
+        switchView('agenda');
+    }
     
     // Highlight today if it's in the current month
     const today = new Date();

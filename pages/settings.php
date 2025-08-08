@@ -64,6 +64,27 @@ $allSettings = [];
 foreach ($categories as $category) {
     $allSettings[$category] = getSettingsByCategory($category);
 }
+
+// Ensure budget tracking setting exists in features if not already there
+$budgetTrackingExists = false;
+foreach ($allSettings['features'] as $setting) {
+    if ($setting['setting_key'] === 'enable_budget_tracking') {
+        $budgetTrackingExists = true;
+        break;
+    }
+}
+
+if (!$budgetTrackingExists) {
+    // Add budget tracking setting manually if it doesn't exist
+    $allSettings['features'][] = [
+        'setting_key' => 'enable_budget_tracking',
+        'setting_value' => 'false',
+        'setting_type' => 'boolean',
+        'description' => 'Enable budget tracking for projects and reporting',
+        'is_editable' => true,
+        'category' => 'features'
+    ];
+}
 ?>
 
 <div class="row mb-4">

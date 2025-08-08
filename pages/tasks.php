@@ -317,7 +317,7 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
                 </thead>
                 <tbody>
                     <?php foreach ($projectTasks as $task): ?>
-                    <tr>
+                    <tr class="clickable-row" data-href="task_view.php?id=<?php echo $task['id']; ?>" style="cursor: pointer;">
                         <td>
                             <div>
                                 <h6 class="mb-1"><?php echo htmlspecialchars($task['title']); ?></h6>
@@ -360,12 +360,12 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
                                 $isOverdue = $daysUntilDue < 0 && $task['status'] !== 'completed';
                                 $isDueSoon = $daysUntilDue <= 3 && $daysUntilDue >= 0;
                                 ?>
-                                <div class="<?php echo $isOverdue ? 'text-danger' : ($isDueSoon ? 'text-warning' : ''); ?>">
+                                <div class="<?php echo $isOverdue ? 'text-danger' : ($isDueSoon ? 'text-dark' : ''); ?>">
                                     <?php echo formatDate($task['due_date']); ?>
                                     <?php if ($isOverdue): ?>
                                         <br><small><i class="bi bi-exclamation-triangle"></i> Overdue</small>
                                     <?php elseif ($isDueSoon): ?>
-                                        <br><small><i class="bi bi-clock"></i> Due soon</small>
+                                        <br><small class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Due soon</small>
                                     <?php endif; ?>
                                 </div>
                             <?php else: ?>
@@ -591,6 +591,25 @@ document.querySelector('[data-search]')?.addEventListener('input', function() {
     searchTimeout = setTimeout(() => {
         document.getElementById('filterForm').submit();
     }, 500);
+});
+
+// Handle clickable task rows
+document.querySelectorAll('.clickable-row').forEach(row => {
+    row.addEventListener('click', function(e) {
+        // Don't trigger if clicking on action buttons, dropdowns, or badges
+        if (e.target.closest('.btn-group') || 
+            e.target.closest('button') || 
+            e.target.closest('a') ||
+            e.target.closest('.dropdown') ||
+            e.target.classList.contains('badge')) {
+            return;
+        }
+        
+        const href = this.dataset.href;
+        if (href) {
+            window.location.href = href;
+        }
+    });
 });
 
 // Load tasks for dependencies when project is selected

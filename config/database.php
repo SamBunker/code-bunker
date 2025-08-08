@@ -77,6 +77,11 @@ class Database {
      * @return PDOStatement|false Returns statement or false on failure
      */
     public function executeQuery($query, $params = []) {
+        if ($this->conn === null) {
+            error_log("Database connection is null - cannot execute query");
+            return false;
+        }
+        
         try {
             $stmt = $this->conn->prepare($query);
             $stmt->execute($params);
@@ -126,13 +131,17 @@ class Database {
 
 /**
  * Global function to get database instance
- * @return Database Database instance
+ * @return Database|null Database instance or null if connection failed
  */
 function getDatabase() {
     static $database = null;
     if ($database === null) {
         $database = new Database();
-        $database->getConnection();
+        $conn = $database->getConnection();
+        if ($conn === null) {
+            error_log("Failed to establish database connection");
+            return null;
+        }
     }
     return $database;
 }
@@ -145,6 +154,10 @@ function getDatabase() {
  */
 function executeQuery($query, $params = []) {
     $database = getDatabase();
+    if ($database === null) {
+        return false;
+    }
+    
     $stmt = $database->executeQuery($query, $params);
     
     if ($stmt !== false) {
@@ -162,6 +175,10 @@ function executeQuery($query, $params = []) {
  */
 function executeQuerySingle($query, $params = []) {
     $database = getDatabase();
+    if ($database === null) {
+        return false;
+    }
+    
     $stmt = $database->executeQuery($query, $params);
     
     if ($stmt !== false) {
@@ -179,6 +196,10 @@ function executeQuerySingle($query, $params = []) {
  */
 function executeUpdate($query, $params = []) {
     $database = getDatabase();
+    if ($database === null) {
+        return false;
+    }
+    
     $stmt = $database->executeQuery($query, $params);
     
     return $stmt !== false;

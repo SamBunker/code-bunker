@@ -113,6 +113,86 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
+/* Dashboard Background - Grid System */
+.dashboard-container {
+    position: relative;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    overflow: auto;
+}
+
+.dashboard-grid {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    background-image: 
+        radial-gradient(circle at 1px 1px, rgba(156, 163, 175, 0.4) 1px, transparent 0);
+    background-size: 40px 40px;
+    background-position: 0 0;
+    padding: 0;
+}
+
+/* Enhanced grid visibility in edit mode */
+.dashboard-edit-mode .dashboard-grid {
+    background-image: 
+        radial-gradient(circle at 1px 1px, rgba(156, 163, 175, 0.6) 2px, transparent 0);
+    background-size: 40px 40px;
+}
+
+/* No visual buffer - just invisible bounding box logic in JavaScript */
+
+/* Grid positioning system */
+.dashboard-panel {
+    position: absolute;
+    transition: all 0.3s ease;
+    cursor: move;
+    min-width: 280px;
+    min-height: 200px;
+    z-index: 1;
+}
+
+/* Removed panel hover z-index change */
+
+.dashboard-panel.dragging {
+    z-index: 1000;
+    transform: rotate(2deg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Grid snap indicators */
+.grid-snap-indicator {
+    position: absolute;
+    border: 2px dashed var(--primary-color);
+    background: rgba(13, 110, 253, 0.1);
+    pointer-events: none;
+    z-index: 999;
+    display: none;
+    transition: all 0.2s ease;
+}
+
+.dashboard-edit-mode .grid-snap-indicator.active {
+    display: block;
+    animation: pulse-grid 1s infinite;
+}
+
+@keyframes pulse-grid {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+}
+
+/* Collision and bounds visual feedback */
+.dashboard-panel.collision-warning {
+    border: 2px solid #dc3545 !important;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5) !important;
+    z-index: 1001 !important;
+}
+
+.dashboard-edit-mode .dashboard-panel {
+    border: 1px solid rgba(156, 163, 175, 0.3);
+}
+
+/* Removed hover effects for cleaner appearance */
+
 /* Navigation Customizations */
 .navbar-brand {
     font-weight: 600;
@@ -143,9 +223,7 @@ body {
     transition: box-shadow 0.15s ease-in-out;
 }
 
-.card:hover {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
+/* Removed card hover shadow effect */
 
 .card-header {
     background-color: transparent;
@@ -415,6 +493,19 @@ body {
     margin-bottom: 0.125rem;
     text-align: center;
     font-weight: 500;
+}
+
+.calendar-event.upcoming-deadline {
+    border: 2px solid #ffc107;
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+    font-weight: 600;
+    animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+    0% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.5); }
+    50% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.5); }
 }
 
 /* Charts */
@@ -695,4 +786,240 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
+}
+
+/* Dashboard Sortable Styles */
+.dashboard-edit-mode .sortable-item {
+    cursor: grab;
+}
+
+.dashboard-edit-mode .sortable-item:active {
+    cursor: grabbing;
+}
+
+.sortable-ghost {
+    opacity: 0.5;
+    background: #c8ebfb;
+}
+
+.sortable-chosen {
+    opacity: 0.8;
+}
+
+.sortable-drag {
+    opacity: 0.6;
+}
+
+.drag-handle {
+    transition: all 0.2s ease;
+}
+
+/* Removed drag handle hover transform */
+
+/* Drag handles should only be visible in edit mode */
+.drag-handle {
+    display: none !important;
+}
+
+.dashboard-edit-mode .drag-handle {
+    display: flex !important;
+}
+
+.dashboard-edit-mode .dashboard-card .card-header.drag-handle {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-bottom: none;
+    padding: 1rem 1.25rem;
+    margin: 0;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    position: relative;
+    top: 0;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dashboard-edit-mode .card .card-header.drag-handle {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.25rem;
+    margin: 0;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    position: relative;
+    top: 0;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sortable-item {
+    transition: all 0.3s ease;
+}
+
+/* Removed sortable item hover effects */
+
+/* Calendar Agenda View Styles */
+.agenda-view {
+    padding: 1rem 0;
+}
+
+.agenda-date-group {
+    margin-bottom: 1.5rem;
+}
+
+.agenda-date-header {
+    font-weight: 600;
+    border-left: 4px solid var(--primary-color);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.agenda-events {
+    padding-left: 1rem;
+}
+
+.agenda-event-item {
+    border: none;
+    border-left: 2px solid #e9ecef;
+    margin-left: 1rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.agenda-event-item:hover {
+    background-color: var(--light-color);
+    border-left-color: var(--primary-color);
+}
+
+.agenda-event-content h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Enhanced Dashboard Panel Styles */
+.sortable-item.panel-expanded {
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.sortable-item.panel-expanded .card {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+.sortable-item.panel-collapsed {
+    transform: scale(0.8);
+    opacity: 0.7;
+}
+
+.sortable-item.panel-collapsed .card-body {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.panel-controls {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.panel-controls button {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 1;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+    color: white;
+}
+
+.panel-controls button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.dashboard-container .card {
+    transition: all 0.3s ease;
+}
+
+/* Removed card hover transform effects */
+
+/* Chart Type Buttons */
+.btn-group[id^="chartTypeButtons-"] {
+    opacity: 0.8;
+}
+
+.btn-group[id^="chartTypeButtons-"] button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(0, 0, 0, 0.7);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.btn-group[id^="chartTypeButtons-"] button:hover {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--primary-color);
+}
+
+/* Enhanced Cards for New Panels */
+.sortable-item[data-panel-type="widget"] .card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.sortable-item[data-panel-type="notes"] .card {
+    border-left: 4px solid var(--primary-color);
+}
+
+.sortable-item[data-panel-type="shortcuts"] .card {
+    border-left: 4px solid var(--success-color);
+}
+
+/* Weather Widget Specific Styles */
+.weather-info {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+/* Animation for adding new panels */
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.sortable-item {
+    animation: slideInFromRight 0.5s ease-out;
+}
+
+/* Enhanced Panel Management Buttons */
+#panelManagementButtons .dropdown-menu {
+    min-width: 200px;
+}
+
+#panelManagementButtons .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+#panelManagementButtons .dropdown-item i {
+    width: 1.25rem;
+    margin-right: 0.5rem;
+}
+
+/* Grid Background Enhancement for Edit Mode */
+.dashboard-edit-mode .dashboard-container::before {
+    background-size: 40px 40px;
+    opacity: 0.8;
+}
+
+.dashboard-edit-mode {
+    background-color: rgba(240, 242, 247, 0.95);
 }
