@@ -599,6 +599,169 @@ function getDashboardStats($userId = null) {
 }
 
 /**
+ * Template Management Functions - Additional Functions
+ */
+
+/**
+ * Update a project template
+ * @param int $templateId Template ID
+ * @param array $data Template data
+ * @return array Result with success status and message
+ */
+function updateProjectTemplate($templateId, $data) {
+    try {
+        $query = "UPDATE project_templates 
+                  SET name = ?, description = ?, category = ?, default_priority = ?, 
+                      estimated_duration_days = ?, estimated_hours = ?, updated_at = NOW()
+                  WHERE id = ? AND is_active = 1";
+        
+        $result = executeUpdate($query, [
+            $data['name'],
+            $data['description'],
+            $data['category'],
+            $data['default_priority'],
+            $data['estimated_duration_days'],
+            $data['estimated_hours'],
+            $templateId
+        ]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Template updated successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to update template'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error updating template: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Create a new template task
+ * @param array $data Template task data
+ * @return array Result with success status and message
+ */
+function createTemplateTask($data) {
+    try {
+        $query = "INSERT INTO template_tasks 
+                  (template_id, title, description, task_type, priority, estimated_hours, order_index, days_after_start) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        $result = executeUpdate($query, [
+            $data['template_id'],
+            $data['title'],
+            $data['description'],
+            $data['task_type'],
+            $data['priority'],
+            $data['estimated_hours'],
+            $data['order_index'],
+            $data['days_after_start']
+        ]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Template task created successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to create template task'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error creating template task: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Update a template task
+ * @param int $taskId Template task ID
+ * @param array $data Template task data
+ * @return array Result with success status and message
+ */
+function updateTemplateTask($taskId, $data) {
+    try {
+        $query = "UPDATE template_tasks 
+                  SET title = ?, description = ?, task_type = ?, priority = ?, 
+                      estimated_hours = ?, order_index = ?, days_after_start = ?
+                  WHERE id = ?";
+        
+        $result = executeUpdate($query, [
+            $data['title'],
+            $data['description'],
+            $data['task_type'],
+            $data['priority'],
+            $data['estimated_hours'],
+            $data['order_index'],
+            $data['days_after_start'],
+            $taskId
+        ]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Template task updated successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to update template task'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error updating template task: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Delete a template task
+ * @param int $taskId Template task ID
+ * @return array Result with success status and message
+ */
+function deleteTemplateTask($taskId) {
+    try {
+        $query = "DELETE FROM template_tasks WHERE id = ?";
+        $result = executeUpdate($query, [$taskId]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Template task deleted successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to delete template task'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error deleting template task: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
  * Note Management Functions
  */
 
@@ -1353,10 +1516,11 @@ function createProjectTemplate($data) {
         ]);
         
         if ($result) {
+            $database = getDatabase();
             return [
                 'success' => true,
                 'message' => 'Template created successfully',
-                'template_id' => getDB()->lastInsertId()
+                'template_id' => $database ? $database->getLastInsertId() : 0
             ];
         } else {
             return [
@@ -1492,6 +1656,302 @@ function applyProjectTemplate($templateId, $projectData) {
         return [
             'success' => false,
             'message' => 'Failed to apply template'
+        ];
+    }
+}
+
+/**
+ * Project Phase Management Functions
+ */
+
+/**
+ * Get all phases for a project
+ * @param int $projectId Project ID
+ * @return array Project phases
+ */
+function getProjectPhases($projectId) {
+    $query = "SELECT * FROM project_phases 
+              WHERE project_id = ? 
+              ORDER BY order_index ASC";
+    
+    return executeQuery($query, [$projectId]) ?: [];
+}
+
+/**
+ * Get tasks grouped by phase for a project
+ * @param int $projectId Project ID
+ * @return array Tasks grouped by phase
+ */
+function getProjectTasksByPhase($projectId) {
+    // First get all phases for this project
+    $phases = getProjectPhases($projectId);
+    $grouped = [];
+    
+    // Initialize all phases (including empty ones)
+    foreach ($phases as $phase) {
+        $grouped[$phase['id']] = [
+            'id' => $phase['id'],
+            'name' => $phase['name'],
+            'description' => $phase['description'],
+            'order_index' => $phase['order_index'],
+            'is_collapsed' => $phase['is_collapsed'],
+            'tasks' => []
+        ];
+    }
+    
+    // Get all tasks with phase and user information
+    $query = "SELECT 
+        t.*,
+        p.name as phase_name,
+        p.order_index as phase_order,
+        p.is_collapsed as phase_collapsed,
+        CONCAT(u.first_name, ' ', u.last_name) as assigned_to_name
+        FROM tasks t
+        LEFT JOIN project_phases p ON t.phase_id = p.id
+        LEFT JOIN users u ON t.assigned_to = u.id
+        WHERE t.project_id = ?
+        ORDER BY 
+            COALESCE(p.order_index, 999) ASC,
+            t.order_index ASC,
+            t.created_at ASC";
+    
+    $tasks = executeQuery($query, [$projectId]) ?: [];
+    
+    // Add tasks to their phases
+    foreach ($tasks as $task) {
+        $phaseId = $task['phase_id'];
+        
+        if ($phaseId && isset($grouped[$phaseId])) {
+            // Task belongs to a specific phase
+            $grouped[$phaseId]['tasks'][] = $task;
+        } else {
+            // Unassigned task - create unassigned group if it doesn't exist
+            if (!isset($grouped['unassigned'])) {
+                $grouped['unassigned'] = [
+                    'id' => null,
+                    'name' => 'Unassigned Tasks',
+                    'description' => '',
+                    'order_index' => 999,
+                    'is_collapsed' => false,
+                    'tasks' => []
+                ];
+            }
+            $grouped['unassigned']['tasks'][] = $task;
+        }
+    }
+    
+    // Sort by order_index
+    uasort($grouped, function($a, $b) {
+        return $a['order_index'] <=> $b['order_index'];
+    });
+    
+    return $grouped;
+}
+
+/**
+ * Create a new project phase
+ * @param array $data Phase data
+ * @return array Result with success status and message
+ */
+function createProjectPhase($data) {
+    try {
+        $query = "INSERT INTO project_phases (project_id, name, description, order_index) 
+                  VALUES (?, ?, ?, ?)";
+        
+        $result = executeUpdate($query, [
+            $data['project_id'],
+            $data['name'],
+            $data['description'] ?? '',
+            $data['order_index'] ?? 0
+        ]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Phase created successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to create phase'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error creating phase: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Update project phase
+ * @param int $phaseId Phase ID
+ * @param array $data Phase data
+ * @return array Result with success status and message
+ */
+function updateProjectPhase($phaseId, $data) {
+    try {
+        $query = "UPDATE project_phases 
+                  SET name = ?, description = ?, order_index = ?
+                  WHERE id = ?";
+        
+        $result = executeUpdate($query, [
+            $data['name'],
+            $data['description'] ?? '',
+            $data['order_index'] ?? 0,
+            $phaseId
+        ]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Phase updated successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to update phase'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error updating phase: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Delete project phase
+ * @param int $phaseId Phase ID
+ * @return array Result with success status and message
+ */
+function deleteProjectPhase($phaseId) {
+    try {
+        // First, unassign tasks from this phase
+        $updateTasksQuery = "UPDATE tasks SET phase_id = NULL WHERE phase_id = ?";
+        executeUpdate($updateTasksQuery, [$phaseId]);
+        
+        // Then delete the phase
+        $deleteQuery = "DELETE FROM project_phases WHERE id = ?";
+        $result = executeUpdate($deleteQuery, [$phaseId]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Phase deleted successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to delete phase'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error deleting phase: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Toggle phase collapsed state
+ * @param int $phaseId Phase ID
+ * @return array Result with success status and message
+ */
+function togglePhaseCollapse($phaseId) {
+    try {
+        $query = "UPDATE project_phases SET is_collapsed = NOT is_collapsed WHERE id = ?";
+        $result = executeUpdate($query, [$phaseId]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Phase visibility toggled'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to toggle phase visibility'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error toggling phase: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Move project phase up or down in order
+ * @param int $phaseId Phase ID
+ * @param string $direction 'up' or 'down'
+ * @return array Result with success status and message
+ */
+function moveProjectPhase($phaseId, $direction) {
+    try {
+        // Get current phase info
+        $currentPhase = executeQuerySingle("SELECT project_id, order_index FROM project_phases WHERE id = ?", [$phaseId]);
+        if (!$currentPhase) {
+            return [
+                'success' => false,
+                'message' => 'Phase not found'
+            ];
+        }
+        
+        $currentOrder = $currentPhase['order_index'];
+        $projectId = $currentPhase['project_id'];
+        
+        if ($direction === 'up') {
+            // Find the phase with the next lower order_index
+            $targetPhase = executeQuerySingle(
+                "SELECT id, order_index FROM project_phases 
+                 WHERE project_id = ? AND order_index < ? 
+                 ORDER BY order_index DESC LIMIT 1", 
+                [$projectId, $currentOrder]
+            );
+        } else { // down
+            // Find the phase with the next higher order_index
+            $targetPhase = executeQuerySingle(
+                "SELECT id, order_index FROM project_phases 
+                 WHERE project_id = ? AND order_index > ? 
+                 ORDER BY order_index ASC LIMIT 1", 
+                [$projectId, $currentOrder]
+            );
+        }
+        
+        if (!$targetPhase) {
+            return [
+                'success' => false,
+                'message' => 'Cannot move phase further ' . $direction
+            ];
+        }
+        
+        // Swap the order_index values
+        $targetOrder = $targetPhase['order_index'];
+        $targetId = $targetPhase['id'];
+        
+        // Update both phases
+        executeUpdate("UPDATE project_phases SET order_index = ? WHERE id = ?", [$targetOrder, $phaseId]);
+        executeUpdate("UPDATE project_phases SET order_index = ? WHERE id = ?", [$currentOrder, $targetId]);
+        
+        return [
+            'success' => true,
+            'message' => 'Phase moved ' . $direction . ' successfully'
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Error moving phase: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
         ];
     }
 }

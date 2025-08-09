@@ -48,10 +48,11 @@ CREATE TABLE projects (
     INDEX idx_category (category)
 );
 
--- Tasks table for specific work items within projects
+-- Tasks table for specific work items within projects (now with phase support)
 CREATE TABLE tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
+    phase_id INT,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     task_type VARCHAR(100) DEFAULT 'General',
@@ -67,9 +68,11 @@ CREATE TABLE tasks (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (phase_id) REFERENCES project_phases(id) ON DELETE CASCADE,
     FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (depends_on_task_id) REFERENCES tasks(id) ON DELETE SET NULL,
     INDEX idx_project_id (project_id),
+    INDEX idx_phase_id (phase_id),
     INDEX idx_status (status),
     INDEX idx_assigned_to (assigned_to),
     INDEX idx_due_date (due_date)
@@ -197,6 +200,76 @@ INSERT INTO notes (project_id, user_id, title, content, note_type) VALUES
 (1, 1, 'PHP Compatibility Issues', 'Found several deprecated mysql_* functions that need to be updated to PDO or mysqli. List of affected files: login.php, database.php, user_management.php', 'technical'),
 (2, 1, 'Stakeholder Meeting Summary', 'Key requirements identified:\n- Single sign-on integration\n- Mobile responsive design\n- Real-time notifications\n- Improved search functionality', 'meeting'),
 (3, 1, 'Security Audit Findings', 'Current API endpoints lack proper authentication and rate limiting. Priority items:\n1. Implement OAuth 2.0\n2. Add rate limiting (100 requests/hour per user)\n3. Enable CORS with whitelist', 'issue');
+
+-- Project Templates table for reusable project templates
+CREATE TABLE project_templates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100) DEFAULT 'General',
+    default_priority ENUM('critical', 'high', 'medium', 'low') DEFAULT 'medium',
+    estimated_duration_days INT DEFAULT 30,
+    estimated_hours DECIMAL(6,2) DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    INDEX idx_category (category),
+    INDEX idx_active (is_active),
+    INDEX idx_created_by (created_by)
+);
+
+-- Template Phases table for organizing template tasks into phases
+CREATE TABLE template_phases (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    template_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    order_index INT DEFAULT 0,
+    is_collapsed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE,
+    INDEX idx_template_id (template_id),
+    INDEX idx_order (order_index)
+);
+
+-- Template Tasks table for tasks within project templates (now with phase support)
+CREATE TABLE template_tasks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    template_id INT NOT NULL,
+    phase_id INT,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    task_type VARCHAR(100) DEFAULT 'General',
+    priority ENUM('critical', 'high', 'medium', 'low') DEFAULT 'medium',
+    estimated_hours DECIMAL(5,2) DEFAULT 0,
+    order_index INT DEFAULT 0,
+    depends_on_template_task_id INT,
+    days_after_start INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE,
+    FOREIGN KEY (phase_id) REFERENCES template_phases(id) ON DELETE CASCADE,
+    FOREIGN KEY (depends_on_template_task_id) REFERENCES template_tasks(id) ON DELETE SET NULL,
+    INDEX idx_template_id (template_id),
+    INDEX idx_phase_id (phase_id),
+    INDEX idx_order (order_index),
+    INDEX idx_depends_on (depends_on_template_task_id)
+);
+
+-- Project Phases table for organizing project tasks into phases
+CREATE TABLE project_phases (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    order_index INT DEFAULT 0,
+    is_collapsed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    INDEX idx_project_id (project_id),
+    INDEX idx_order (order_index)
+);
 
 -- Create views for common queries
 CREATE VIEW project_summary AS

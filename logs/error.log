@@ -280,3 +280,143 @@ Stack trace:
 #0 C:\xampp\htdocs\juniata\code-bunker\pages\templates.php(39): createProjectTemplate(Array)
 #1 {main}
   thrown in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php on line 1359
+[08-Aug-2025 20:46:58 America/New_York] PHP Warning:  Undefined array key "project_id" in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php on line 398
+[08-Aug-2025 20:46:58 America/New_York] Query Execution Error: SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (`web_app_tracker`.`tasks`, CONSTRAINT `tasks_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE)
+[08-Aug-2025 20:47:02 America/New_York] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function updateProject(), 2 passed in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 76 and exactly 3 expected in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php:156
+Stack trace:
+#0 C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php(76): updateProject(1, Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php on line 156
+[09-Aug-2025 06:59:47 America/New_York] PHP Warning:  Undefined array key "project_id" in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php on line 398
+[09-Aug-2025 06:59:48 America/New_York] Query Execution Error: SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (`web_app_tracker`.`tasks`, CONSTRAINT `tasks_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE)
+[09-Aug-2025 07:00:15 America/New_York] PHP Warning:  Undefined array key "project_id" in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php on line 398
+[09-Aug-2025 07:00:15 America/New_York] Query Execution Error: SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (`web_app_tracker`.`tasks`, CONSTRAINT `tasks_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE)
+[09-Aug-2025 07:02:39 America/New_York] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function updateProject(), 2 passed in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 76 and exactly 3 expected in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php:156
+Stack trace:
+#0 C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php(76): updateProject(1, Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php on line 156
+[09-Aug-2025 07:14:56 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function fetchAll() on array in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php:58
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 58
+[09-Aug-2025 07:15:00 America/New_York] PHP Fatal error:  Uncaught Error: Call to a member function fetchAll() on array in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php:58
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 58
+[09-Aug-2025 07:28:27 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function getDB() in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php:1359
+Stack trace:
+#0 C:\xampp\htdocs\juniata\code-bunker\pages\templates.php(39): createProjectTemplate(Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php on line 1359
+[09-Aug-2025 07:45:43 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\pages\template_view.php on line 31
+[09-Aug-2025 08:15:47 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:15:47 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:15:47 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:15:47 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1245
+[09-Aug-2025 08:16:03 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:16:03 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:16:03 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:16:03 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:16:03 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1245
+[09-Aug-2025 08:17:50 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:17:50 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:17:50 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:17:50 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:17:50 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1245
+[09-Aug-2025 08:17:59 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:17:59 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:17:59 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:17:59 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:17:59 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1245
+[09-Aug-2025 08:18:03 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:18:03 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:18:03 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:18:03 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:18:03 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1245
+[09-Aug-2025 08:18:11 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:18:11 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:18:11 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:18:11 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1245
+[09-Aug-2025 08:18:13 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:18:13 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:18:13 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:18:13 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1245
+[09-Aug-2025 08:18:15 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:18:15 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:18:15 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:18:15 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1245
+[09-Aug-2025 08:20:09 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:20:09 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:20:09 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:20:09 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1255
+[09-Aug-2025 08:20:14 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:20:14 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:20:14 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 473
+[09-Aug-2025 08:20:14 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1255
+[09-Aug-2025 08:22:44 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:22:44 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:22:44 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:22:44 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1257
+[09-Aug-2025 08:22:58 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:22:58 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:22:58 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:22:58 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1257
+[09-Aug-2025 08:23:03 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:23:03 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:23:03 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:23:03 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1257
+[09-Aug-2025 08:23:22 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:23:22 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:23:22 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:23:22 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:23:22 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1257
+[09-Aug-2025 08:24:56 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:24:56 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:24:56 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:24:56 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:24:56 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1257
+[09-Aug-2025 08:25:09 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:25:09 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:25:09 America/New_York] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 475
+[09-Aug-2025 08:25:09 America/New_York] PHP Warning:  Undefined variable $tasks in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 1257
+[09-Aug-2025 08:25:41 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:25:51 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:25:51 America/New_York] DELETE PHASE: Attempting to delete phase ID: 1
+[09-Aug-2025 08:25:51 America/New_York] DELETE PHASE: Result - SUCCESS: Phase deleted successfully
+[09-Aug-2025 08:25:51 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:26:53 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\pages\project_view.php on line 20
+[09-Aug-2025 08:26:58 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:27:10 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:28:35 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:30:00 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:41:13 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:41:13 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:41:20 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:41:20 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:41:22 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 08:41:22 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:38 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:38 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:41 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:46 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:46 America/New_York] DELETE PHASE: Attempting to delete phase ID: 2
+[09-Aug-2025 09:02:46 America/New_York] DELETE PHASE: Result - SUCCESS: Phase deleted successfully
+[09-Aug-2025 09:02:46 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:48 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:48 America/New_York] DELETE PHASE: Attempting to delete phase ID: 3
+[09-Aug-2025 09:02:48 America/New_York] DELETE PHASE: Result - SUCCESS: Phase deleted successfully
+[09-Aug-2025 09:02:48 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:50 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:50 America/New_York] DELETE PHASE: Attempting to delete phase ID: 4
+[09-Aug-2025 09:02:50 America/New_York] DELETE PHASE: Result - SUCCESS: Phase deleted successfully
+[09-Aug-2025 09:02:50 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:52 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:02:52 America/New_York] DELETE PHASE: Attempting to delete phase ID: 5
+[09-Aug-2025 09:02:52 America/New_York] DELETE PHASE: Result - SUCCESS: Phase deleted successfully
+[09-Aug-2025 09:02:52 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:03:10 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:03:10 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:03:30 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:03:30 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 09:03:38 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'

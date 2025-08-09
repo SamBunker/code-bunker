@@ -5,7 +5,11 @@
       "Bash(rm:*)",
       "Bash(php -l:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(mysql:*)",
+      "Bash(\"C:\\xampp\\mysql\\bin\\mysql\" -u root code_bunker -e \"\nCREATE TABLE IF NOT EXISTS project_templates (\n    id INT PRIMARY KEY AUTO_INCREMENT,\n    name VARCHAR(255) NOT NULL,\n    description TEXT,\n    category VARCHAR(100) DEFAULT ''General'',\n    default_priority ENUM(''low'', ''medium'', ''high'', ''critical'') DEFAULT ''medium'',\n    estimated_duration_days INT DEFAULT 30,\n    estimated_hours DECIMAL(6,2) DEFAULT 0,\n    is_active BOOLEAN DEFAULT TRUE,\n    created_by INT NOT NULL,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n    FOREIGN KEY (created_by) REFERENCES users(id),\n    INDEX idx_category (category),\n    INDEX idx_active (is_active),\n    INDEX idx_created_by (created_by)\n);\n\nCREATE TABLE IF NOT EXISTS template_tasks (\n    id INT PRIMARY KEY AUTO_INCREMENT,\n    template_id INT NOT NULL,\n    title VARCHAR(255) NOT NULL,\n    description TEXT,\n    task_type VARCHAR(100) DEFAULT ''General'',\n    priority ENUM(''low'', ''medium'', ''high'', ''critical'') DEFAULT ''medium'',\n    estimated_hours DECIMAL(5,2) DEFAULT 0,\n    order_index INT DEFAULT 0,\n    depends_on_template_task_id INT,\n    days_after_start INT DEFAULT 0,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE,\n    FOREIGN KEY (depends_on_template_task_id) REFERENCES template_tasks(id) ON DELETE SET NULL,\n    INDEX idx_template_id (template_id),\n    INDEX idx_order (order_index),\n    INDEX idx_depends_on (depends_on_template_task_id)\n);\")",
+      "Bash(\"C:\\xampp\\mysql\\bin\\mysql\" -u root -e \"SHOW DATABASES;\")",
+      "Bash(\"C:\\xampp\\mysql\\bin\\mysql\" -u root web_app_tracker -e \"SHOW TABLES LIKE ''%template%'';\")"
     ],
     "deny": []
   }

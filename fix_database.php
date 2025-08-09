@@ -97,10 +97,25 @@ function createTables($pdo) {
                 INDEX idx_category (category)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
             
+        'project_phases' => "
+            CREATE TABLE project_phases (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                project_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                order_index INT DEFAULT 0,
+                is_collapsed BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                INDEX idx_project_id (project_id),
+                INDEX idx_order (order_index)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            
         'tasks' => "
             CREATE TABLE tasks (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 project_id INT NOT NULL,
+                phase_id INT,
                 title VARCHAR(255) NOT NULL,
                 description TEXT,
                 task_type VARCHAR(100) DEFAULT 'General',
@@ -116,9 +131,11 @@ function createTables($pdo) {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 completed_at TIMESTAMP NULL,
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (phase_id) REFERENCES project_phases(id) ON DELETE CASCADE,
                 FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
                 FOREIGN KEY (depends_on_task_id) REFERENCES tasks(id) ON DELETE SET NULL,
                 INDEX idx_project_id (project_id),
+                INDEX idx_phase_id (phase_id),
                 INDEX idx_status (status),
                 INDEX idx_priority (priority),
                 INDEX idx_due_date (due_date),
@@ -197,10 +214,25 @@ function createTables($pdo) {
                 INDEX idx_is_active (is_active)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
             
+        'template_phases' => "
+            CREATE TABLE template_phases (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                template_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                order_index INT DEFAULT 0,
+                is_collapsed BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE,
+                INDEX idx_template_id (template_id),
+                INDEX idx_order (order_index)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            
         'template_tasks' => "
             CREATE TABLE template_tasks (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 template_id INT NOT NULL,
+                phase_id INT,
                 title VARCHAR(255) NOT NULL,
                 description TEXT,
                 task_type VARCHAR(100) DEFAULT 'General',
@@ -211,8 +243,10 @@ function createTables($pdo) {
                 days_after_start INT DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE,
+                FOREIGN KEY (phase_id) REFERENCES template_phases(id) ON DELETE CASCADE,
                 FOREIGN KEY (depends_on_template_task_id) REFERENCES template_tasks(id) ON DELETE SET NULL,
                 INDEX idx_template_id (template_id),
+                INDEX idx_phase_id (phase_id),
                 INDEX idx_order_index (order_index)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     ];
@@ -343,24 +377,52 @@ function insertSampleData($pdo) {
         }
         echo "✅ Added sample project templates<br>";
         
-        // Add sample template tasks for Web Application Update template
+        // Add sample template phases for Web Application Update template
+        $webAppPhases = [
+            ['template_id' => 1, 'name' => 'Planning & Assessment', 'description' => 'Initial analysis and planning phase', 'order_index' => 1],
+            ['template_id' => 1, 'name' => 'Development & Updates', 'description' => 'Core development and system updates', 'order_index' => 2],
+            ['template_id' => 1, 'name' => 'Testing & Deployment', 'description' => 'Quality assurance and production deployment', 'order_index' => 3]
+        ];
+        
+        foreach ($webAppPhases as $phase) {
+            $pdo->prepare("
+                INSERT INTO template_phases (template_id, name, description, order_index) 
+                VALUES (?, ?, ?, ?)
+            ")->execute([$phase['template_id'], $phase['name'], $phase['description'], $phase['order_index']]);
+        }
+        echo "✅ Added sample template phases<br>";
+        
+        // Add sample template tasks for Web Application Update template (with phases)
         $webAppTasks = [
-            ['title' => 'Security Assessment', 'description' => 'Perform comprehensive security audit', 'task_type' => 'Security Updates', 'priority' => 'critical', 'estimated_hours' => 16, 'order_index' => 1, 'days_after_start' => 0],
-            ['title' => 'Update Framework Dependencies', 'description' => 'Update all framework and library dependencies to latest secure versions', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 2, 'days_after_start' => 3],
-            ['title' => 'Database Migration', 'description' => 'Update database schema and migrate data', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 20, 'order_index' => 3, 'days_after_start' => 7],
-            ['title' => 'UI/UX Modernization', 'description' => 'Update user interface with modern design patterns', 'task_type' => 'UI/UX Improvements', 'priority' => 'medium', 'estimated_hours' => 32, 'order_index' => 4, 'days_after_start' => 10],
-            ['title' => 'Performance Optimization', 'description' => 'Optimize application performance and loading times', 'task_type' => 'Performance Optimization', 'priority' => 'medium', 'estimated_hours' => 16, 'order_index' => 5, 'days_after_start' => 15],
-            ['title' => 'Testing & QA', 'description' => 'Comprehensive testing including unit, integration, and user acceptance tests', 'task_type' => 'Testing', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 6, 'days_after_start' => 20],
-            ['title' => 'Documentation Update', 'description' => 'Update user and technical documentation', 'task_type' => 'Documentation Updates', 'priority' => 'medium', 'estimated_hours' => 8, 'order_index' => 7, 'days_after_start' => 25]
+            ['phase_id' => 1, 'title' => 'Security Assessment', 'description' => 'Perform comprehensive security audit', 'task_type' => 'Security Updates', 'priority' => 'critical', 'estimated_hours' => 16, 'order_index' => 1, 'days_after_start' => 0],
+            ['phase_id' => 1, 'title' => 'Requirements Analysis', 'description' => 'Analyze current system and define upgrade requirements', 'task_type' => 'Documentation Updates', 'priority' => 'high', 'estimated_hours' => 12, 'order_index' => 2, 'days_after_start' => 1],
+            ['phase_id' => 2, 'title' => 'Update Framework Dependencies', 'description' => 'Update all framework and library dependencies to latest secure versions', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 3, 'days_after_start' => 3],
+            ['phase_id' => 2, 'title' => 'Database Migration', 'description' => 'Update database schema and migrate data', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 20, 'order_index' => 4, 'days_after_start' => 7],
+            ['phase_id' => 2, 'title' => 'UI/UX Modernization', 'description' => 'Update user interface with modern design patterns', 'task_type' => 'UI/UX Improvements', 'priority' => 'medium', 'estimated_hours' => 32, 'order_index' => 5, 'days_after_start' => 10],
+            ['phase_id' => 2, 'title' => 'Performance Optimization', 'description' => 'Optimize application performance and loading times', 'task_type' => 'Performance Optimization', 'priority' => 'medium', 'estimated_hours' => 16, 'order_index' => 6, 'days_after_start' => 15],
+            ['phase_id' => 3, 'title' => 'Testing & QA', 'description' => 'Comprehensive testing including unit, integration, and user acceptance tests', 'task_type' => 'Testing', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 7, 'days_after_start' => 20],
+            ['phase_id' => 3, 'title' => 'Documentation Update', 'description' => 'Update user and technical documentation', 'task_type' => 'Documentation Updates', 'priority' => 'medium', 'estimated_hours' => 8, 'order_index' => 8, 'days_after_start' => 25],
+            ['phase_id' => 3, 'title' => 'Production Deployment', 'description' => 'Deploy updated application to production environment', 'task_type' => 'Deployment', 'priority' => 'critical', 'estimated_hours' => 12, 'order_index' => 9, 'days_after_start' => 27]
         ];
         
         foreach ($webAppTasks as $task) {
             $pdo->prepare("
-                INSERT INTO template_tasks (template_id, title, description, task_type, priority, estimated_hours, order_index, days_after_start) 
-                VALUES (1, ?, ?, ?, ?, ?, ?, ?)
-            ")->execute([$task['title'], $task['description'], $task['task_type'], $task['priority'], $task['estimated_hours'], $task['order_index'], $task['days_after_start']]);
+                INSERT INTO template_tasks (template_id, phase_id, title, description, task_type, priority, estimated_hours, order_index, days_after_start) 
+                VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
+            ")->execute([$task['phase_id'], $task['title'], $task['description'], $task['task_type'], $task['priority'], $task['estimated_hours'], $task['order_index'], $task['days_after_start']]);
         }
-        echo "✅ Added sample template tasks<br>";
+        echo "✅ Added sample template tasks with phases<br>";
+        
+        // Add sample project phase for existing project
+        $pdo->prepare("
+            INSERT INTO project_phases (project_id, name, description, order_index) 
+            VALUES (1, 'Implementation Phase', 'Main development and implementation tasks', 1)
+        ")->execute();
+        echo "✅ Added sample project phase<br>";
+        
+        // Update existing task to be in the phase
+        $pdo->prepare("UPDATE tasks SET phase_id = 1 WHERE id = 1")->execute();
+        echo "✅ Updated existing task to be in phase<br>";
         
         return true;
     } catch (PDOException $e) {

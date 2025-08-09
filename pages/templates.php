@@ -100,7 +100,7 @@ $templates = getProjectTemplates();
                         </button>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="template_view.php?id=<?= $template['id'] ?>">
-                                <i class="bi bi-eye"></i> View Tasks
+                                <i class="bi bi-eye"></i> View & Edit
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><button class="dropdown-item text-danger" 
