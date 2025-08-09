@@ -159,6 +159,61 @@ function createTables($pdo) {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
                 INDEX idx_setting_key (setting_key)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            
+        'activity_log' => "
+            CREATE TABLE activity_log (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                action VARCHAR(100) NOT NULL,
+                entity_type ENUM('project', 'task', 'note', 'user') NOT NULL,
+                entity_id INT NOT NULL,
+                old_values JSON NULL,
+                new_values JSON NULL,
+                description TEXT,
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_activity_log_created_at_desc (created_at DESC)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            
+        'project_templates' => "
+            CREATE TABLE project_templates (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                category VARCHAR(100) DEFAULT 'General',
+                default_priority ENUM('critical', 'high', 'medium', 'low') DEFAULT 'medium',
+                estimated_duration_days INT DEFAULT 0,
+                estimated_hours DECIMAL(6,2) DEFAULT 0,
+                created_by INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_name (name),
+                INDEX idx_category (category),
+                INDEX idx_is_active (is_active)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            
+        'template_tasks' => "
+            CREATE TABLE template_tasks (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                template_id INT NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                task_type VARCHAR(100) DEFAULT 'General',
+                priority ENUM('critical', 'high', 'medium', 'low') DEFAULT 'medium',
+                estimated_hours DECIMAL(5,2) DEFAULT 0,
+                order_index INT DEFAULT 0,
+                depends_on_template_task_id INT NULL,
+                days_after_start INT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE,
+                FOREIGN KEY (depends_on_template_task_id) REFERENCES template_tasks(id) ON DELETE SET NULL,
+                INDEX idx_template_id (template_id),
+                INDEX idx_order_index (order_index)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     ];
     
@@ -190,7 +245,7 @@ function insertSampleData($pdo) {
         $hashedPassword = password_hash('user123', PASSWORD_DEFAULT);
         $pdo->prepare("
             INSERT INTO users (username, email, password_hash, role, first_name, last_name) 
-            VALUES (?, ?, ?, 'user', 'John', 'Doe')
+            VALUES (?, ?, ?, 'user', 'Unassigned', 'User')
         ")->execute(['user', 'user@example.com', $hashedPassword]);
         echo "✅ Created regular user (username: user, password: user123)<br>";
         
@@ -242,6 +297,70 @@ function insertSampleData($pdo) {
             ")->execute([$setting[0], $setting[1], $setting[2], $setting[3], $setting[4], 1]);
         }
         echo "✅ Added default settings<br>";
+        
+        // Add sample activity log entries
+        $sampleActivities = [
+            [1, 'login', 'user', 1, 'User logged in', '127.0.0.1', 'NOW() - INTERVAL 5 MINUTE'],
+            [1, 'create', 'project', 1, 'Created new project', '127.0.0.1', 'NOW() - INTERVAL 3 MINUTE'],
+            [1, 'update', 'task', 1, 'Updated task status', '127.0.0.1', 'NOW() - INTERVAL 1 MINUTE']
+        ];
+        
+        foreach ($sampleActivities as $activity) {
+            $pdo->prepare("
+                INSERT INTO activity_log (user_id, action, entity_type, entity_id, description, ip_address, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, {$activity[6]})
+            ")->execute([$activity[0], $activity[1], $activity[2], $activity[3], $activity[4], $activity[5]]);
+        }
+        echo "✅ Added sample activity log entries<br>";
+        
+        // Add sample project templates
+        $sampleTemplates = [
+            [
+                'name' => 'Web Application Update',
+                'description' => 'Standard web application modernization and security update template',
+                'category' => 'Web Development',
+                'default_priority' => 'high',
+                'estimated_duration_days' => 30,
+                'estimated_hours' => 120,
+                'created_by' => 1
+            ],
+            [
+                'name' => 'Mobile App Development',
+                'description' => 'Complete mobile application development lifecycle template',
+                'category' => 'Mobile Development',
+                'default_priority' => 'medium',
+                'estimated_duration_days' => 90,
+                'estimated_hours' => 360,
+                'created_by' => 1
+            ]
+        ];
+        
+        foreach ($sampleTemplates as $template) {
+            $pdo->prepare("
+                INSERT INTO project_templates (name, description, category, default_priority, estimated_duration_days, estimated_hours, created_by) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ")->execute([$template['name'], $template['description'], $template['category'], $template['default_priority'], $template['estimated_duration_days'], $template['estimated_hours'], $template['created_by']]);
+        }
+        echo "✅ Added sample project templates<br>";
+        
+        // Add sample template tasks for Web Application Update template
+        $webAppTasks = [
+            ['title' => 'Security Assessment', 'description' => 'Perform comprehensive security audit', 'task_type' => 'Security Updates', 'priority' => 'critical', 'estimated_hours' => 16, 'order_index' => 1, 'days_after_start' => 0],
+            ['title' => 'Update Framework Dependencies', 'description' => 'Update all framework and library dependencies to latest secure versions', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 2, 'days_after_start' => 3],
+            ['title' => 'Database Migration', 'description' => 'Update database schema and migrate data', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 20, 'order_index' => 3, 'days_after_start' => 7],
+            ['title' => 'UI/UX Modernization', 'description' => 'Update user interface with modern design patterns', 'task_type' => 'UI/UX Improvements', 'priority' => 'medium', 'estimated_hours' => 32, 'order_index' => 4, 'days_after_start' => 10],
+            ['title' => 'Performance Optimization', 'description' => 'Optimize application performance and loading times', 'task_type' => 'Performance Optimization', 'priority' => 'medium', 'estimated_hours' => 16, 'order_index' => 5, 'days_after_start' => 15],
+            ['title' => 'Testing & QA', 'description' => 'Comprehensive testing including unit, integration, and user acceptance tests', 'task_type' => 'Testing', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 6, 'days_after_start' => 20],
+            ['title' => 'Documentation Update', 'description' => 'Update user and technical documentation', 'task_type' => 'Documentation Updates', 'priority' => 'medium', 'estimated_hours' => 8, 'order_index' => 7, 'days_after_start' => 25]
+        ];
+        
+        foreach ($webAppTasks as $task) {
+            $pdo->prepare("
+                INSERT INTO template_tasks (template_id, title, description, task_type, priority, estimated_hours, order_index, days_after_start) 
+                VALUES (1, ?, ?, ?, ?, ?, ?, ?)
+            ")->execute([$task['title'], $task['description'], $task['task_type'], $task['priority'], $task['estimated_hours'], $task['order_index'], $task['days_after_start']]);
+        }
+        echo "✅ Added sample template tasks<br>";
         
         return true;
     } catch (PDOException $e) {

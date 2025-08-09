@@ -22,6 +22,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     switch ($action) {
         case 'create':
+            $templateId = intval($_POST['template_id'] ?? 0);
+            
+            if ($templateId > 0) {
+                // Create project from template
+                $templateProjectData = [
+                    'name' => sanitizeInput($_POST['name']),
+                    'description' => sanitizeInput($_POST['description']),
+                    'start_date' => $_POST['start_date'] ?: null,
+                    'due_date' => $_POST['due_date'] ?: null,
+                    'assigned_to' => intval($_POST['assigned_to']) ?: null,
+                    'created_by' => $currentUser['id']
+                ];
+                
+                $result = applyProjectTemplate($templateId, $templateProjectData);
+                $message = $result['message'];
+                $messageType = $result['success'] ? 'success' : 'error';
+            } else {
+                // Create project normally
+                $data = [
+                    'name' => sanitizeInput($_POST['name']),
+                    'description' => sanitizeInput($_POST['description']),
+                    'category' => sanitizeInput($_POST['category']),
+                    'priority' => sanitizeInput($_POST['priority']),
+                    'status' => sanitizeInput($_POST['status']),
+                    'start_date' => $_POST['start_date'] ?: null,
+                    'due_date' => $_POST['due_date'] ?: null,
+                    'estimated_hours' => floatval($_POST['estimated_hours']),
+                    'budget' => isFeatureEnabled('budget_tracking') ? (floatval($_POST['budget']) ?: null) : null,
+                    'assigned_to' => intval($_POST['assigned_to']) ?: null,
+                    'created_by' => $currentUser['id']
+                ];
+                
+                $result = createProject($data);
+                $message = $result['message'];
+                $messageType = $result['success'] ? 'success' : 'error';
+            }
+            break;
+            
+        case 'create_old':
             $data = [
                 'name' => sanitizeInput($_POST['name']),
                 'description' => sanitizeInput($_POST['description']),
@@ -94,6 +133,7 @@ $totalPages = ceil($totalProjects / $limit);
 // Get data for dropdowns
 $users = getUsers();
 $categories = getProjectCategories();
+$templates = getProjectTemplates();
 
 // Get current action for modal display
 $currentAction = $_GET['action'] ?? 'list';
@@ -188,6 +228,78 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
 
 <!-- Projects Table -->
 <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Projects (<?= count($projects) ?>)</h5>
+        <div class="d-flex gap-2">
+            <!-- Column Visibility Toggle -->
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                        id="columnToggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-columns-gap"></i> Columns
+                </button>
+                <ul class="dropdown-menu p-2" aria-labelledby="columnToggle" style="min-width: 200px;">
+                    <li class="dropdown-header">Show/Hide Columns</li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input column-toggle" type="checkbox" id="col-project" 
+                                   data-column="0" checked disabled>
+                            <label class="form-check-label small" for="col-project">Project</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input column-toggle" type="checkbox" id="col-category" 
+                                   data-column="1">
+                            <label class="form-check-label small" for="col-category">Category</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input column-toggle" type="checkbox" id="col-status" 
+                                   data-column="2" checked>
+                            <label class="form-check-label small" for="col-status">Status</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input column-toggle" type="checkbox" id="col-priority" 
+                                   data-column="3" checked>
+                            <label class="form-check-label small" for="col-priority">Priority</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input column-toggle" type="checkbox" id="col-progress" 
+                                   data-column="4" checked>
+                            <label class="form-check-label small" for="col-progress">Progress</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input column-toggle" type="checkbox" id="col-assigned" 
+                                   data-column="5" checked>
+                            <label class="form-check-label small" for="col-assigned">Assigned To</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input column-toggle" type="checkbox" id="col-due-date" 
+                                   data-column="6" checked>
+                            <label class="form-check-label small" for="col-due-date">Due Date</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input column-toggle" type="checkbox" id="col-actions" 
+                                   data-column="7" checked disabled>
+                            <label class="form-check-label small" for="col-actions">Actions</label>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
     <div class="card-body p-0">
         <?php if (empty($projects)): ?>
         <div class="text-center p-5">
@@ -200,30 +312,32 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
         </div>
         <?php else: ?>
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0" id="projectsTable">
                 <thead class="table-light">
                     <tr>
-                        <th>Project</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Progress</th>
-                        <th>Assigned To</th>
-                        <th>Due Date</th>
-                        <th>Actions</th>
+                        <th data-column="0">Project</th>
+                        <th data-column="1" class="d-none">Category</th>
+                        <th data-column="2">Status</th>
+                        <th data-column="3">Priority</th>
+                        <th data-column="4">Progress</th>
+                        <th data-column="5">Assigned To</th>
+                        <th data-column="6">Due Date</th>
+                        <th data-column="7">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($projects as $project): ?>
                     <tr class="clickable-row" data-href="project_view.php?id=<?php echo $project['id']; ?>" style="cursor: pointer;">
-                        <td>
+                        <td data-column="0">
                             <div>
                                 <h6 class="mb-1"><?php echo htmlspecialchars($project['name']); ?></h6>
                                 <small class="text-muted"><?php echo htmlspecialchars($project['category']); ?></small>
                             </div>
                         </td>
-                        <td><?php echo getStatusBadge($project['status'], 'project'); ?></td>
-                        <td><?php echo getPriorityBadge($project['priority']); ?></td>
-                        <td>
+                        <td data-column="1" class="d-none"><?php echo htmlspecialchars($project['category']); ?></td>
+                        <td data-column="2"><?php echo getStatusBadge($project['status'], 'project'); ?></td>
+                        <td data-column="3"><?php echo getPriorityBadge($project['priority']); ?></td>
+                        <td data-column="4">
                             <?php 
                             $progress = 0;
                             if ($project['total_tasks'] > 0) {
@@ -237,10 +351,10 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
                                 <small class="text-muted"><?php echo $progress; ?>%</small>
                             </div>
                         </td>
-                        <td>
+                        <td data-column="5">
                             <?php echo $project['assigned_to_name'] ?: '<span class="text-muted">Unassigned</span>'; ?>
                         </td>
-                        <td>
+                        <td data-column="6">
                             <?php if ($project['due_date']): ?>
                                 <?php echo formatDate($project['due_date']); ?>
                                 <?php if ($project['due_date'] < date('Y-m-d') && $project['status'] !== 'completed'): ?>
@@ -250,7 +364,7 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
                                 <span class="text-muted">Not set</span>
                             <?php endif; ?>
                         </td>
-                        <td>
+                        <td data-column="7">
                             <div class="btn-group" role="group">
                                 <button type="button" class="btn btn-sm btn-outline-primary" 
                                         onclick="viewProject(<?php echo $project['id']; ?>)">
@@ -301,6 +415,24 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
                     <input type="hidden" name="project_id" id="projectId">
                     
                     <div class="row g-3">
+                        <div class="col-12">
+                            <label for="template_id" class="form-label">Start from Template (Optional)</label>
+                            <select class="form-select" id="template_id" name="template_id" onchange="handleTemplateSelection()">
+                                <option value="">Create from scratch</option>
+                                <?php foreach ($templates as $template): ?>
+                                <option value="<?php echo $template['id']; ?>" 
+                                        data-category="<?php echo $template['category']; ?>"
+                                        data-priority="<?php echo $template['default_priority']; ?>"
+                                        data-hours="<?php echo $template['estimated_hours']; ?>"
+                                        data-description="<?php echo htmlspecialchars($template['description']); ?>">
+                                    <?php echo htmlspecialchars($template['name']); ?> 
+                                    (<?php echo $template['task_count']; ?> tasks, <?php echo $template['estimated_hours']; ?>h)
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="form-text text-muted">Select a template to pre-populate project details and tasks.</small>
+                        </div>
+                        
                         <div class="col-12">
                             <label for="name" class="form-label">Project Name *</label>
                             <input type="text" class="form-control" id="name" name="name" required>
@@ -401,6 +533,86 @@ function openCreateModal() {
     document.getElementById('submitBtn').innerHTML = '<i class="bi bi-check-lg"></i> Create Project';
     document.getElementById('projectForm').reset();
     document.getElementById('projectId').value = '';
+    handleTemplateSelection(); // Show/hide fields based on template selection
+}
+
+function handleTemplateSelection() {
+    const templateSelect = document.getElementById('template_id');
+    const selectedOption = templateSelect.options[templateSelect.selectedIndex];
+    const isTemplate = templateSelect.value !== '';
+    
+    // Get form fields
+    const categoryField = document.getElementById('category');
+    const priorityField = document.getElementById('priority');
+    const statusField = document.getElementById('status');
+    const estimatedHoursField = document.getElementById('estimated_hours');
+    const descriptionField = document.getElementById('description');
+    
+    // Get the parent containers
+    const categoryContainer = categoryField?.closest('.col-md-6');
+    const priorityContainer = priorityField?.closest('.col-md-3');
+    const statusContainer = statusField?.closest('.col-md-3');
+    const estimatedHoursContainer = estimatedHoursField?.closest('.col-md-4');
+    
+    if (isTemplate) {
+        // Pre-populate fields from template data
+        if (selectedOption.dataset.category && categoryField) {
+            categoryField.value = selectedOption.dataset.category;
+        }
+        if (selectedOption.dataset.priority && priorityField) {
+            priorityField.value = selectedOption.dataset.priority;
+        }
+        if (selectedOption.dataset.hours && estimatedHoursField) {
+            estimatedHoursField.value = selectedOption.dataset.hours;
+        }
+        if (selectedOption.dataset.description && descriptionField) {
+            descriptionField.value = selectedOption.dataset.description;
+        }
+        
+        // Hide template-controlled fields
+        if (categoryContainer) categoryContainer.style.display = 'none';
+        if (priorityContainer) priorityContainer.style.display = 'none';
+        if (estimatedHoursContainer) estimatedHoursContainer.style.display = 'none';
+        
+        // Show template info
+        showTemplateInfo(selectedOption);
+        
+    } else {
+        // Show all fields for manual creation
+        if (categoryContainer) categoryContainer.style.display = '';
+        if (priorityContainer) priorityContainer.style.display = '';
+        if (estimatedHoursContainer) estimatedHoursContainer.style.display = '';
+        
+        // Clear template info
+        hideTemplateInfo();
+    }
+}
+
+function showTemplateInfo(templateOption) {
+    let infoDiv = document.getElementById('template-info');
+    if (!infoDiv) {
+        infoDiv = document.createElement('div');
+        infoDiv.id = 'template-info';
+        infoDiv.className = 'alert alert-info mt-2';
+        document.getElementById('template_id').parentNode.appendChild(infoDiv);
+    }
+    
+    infoDiv.innerHTML = `
+        <small>
+            <strong>Template Details:</strong><br>
+            Category: ${templateOption.dataset.category}<br>
+            Priority: ${templateOption.dataset.priority}<br>
+            Estimated Hours: ${templateOption.dataset.hours}h<br>
+            This will create the project with pre-configured tasks.
+        </small>
+    `;
+}
+
+function hideTemplateInfo() {
+    const infoDiv = document.getElementById('template-info');
+    if (infoDiv) {
+        infoDiv.remove();
+    }
 }
 
 function editProject(id) {
@@ -461,9 +673,97 @@ document.querySelectorAll('.clickable-row').forEach(row => {
     });
 });
 
-<?php if ($currentAction === 'create' || $currentAction === 'edit'): ?>
-// Auto-open modal for create/edit actions
-document.addEventListener('DOMContentLoaded', function() {
+// Column toggle functionality - run after DOM is loaded
+function initColumnToggle() {
+    // Load saved column preferences
+    const savedColumns = localStorage.getItem('projects-visible-columns');
+    let visibleColumns = [];
+    
+    if (savedColumns) {
+        visibleColumns = JSON.parse(savedColumns);
+    } else {
+        // Default visibility - show all except Category (column 1)
+        visibleColumns = ['0', '2', '3', '4', '5', '6', '7'];
+    }
+    
+    // Apply column visibility
+    const checkboxes = document.querySelectorAll('.column-toggle');
+    
+    checkboxes.forEach(checkbox => {
+        const columnIndex = checkbox.dataset.column;
+        checkbox.checked = visibleColumns.includes(columnIndex);
+        
+        // Apply visibility to headers and cells
+        const isVisible = checkbox.checked;
+        const headerCol = document.querySelector(`#projectsTable thead th[data-column="${columnIndex}"]`);
+        if (headerCol) {
+            headerCol.classList.toggle('d-none', !isVisible);
+        }
+        
+        const bodyCols = document.querySelectorAll(`#projectsTable tbody td[data-column="${columnIndex}"]`);
+        bodyCols.forEach(col => {
+            col.classList.toggle('d-none', !isVisible);
+        });
+        
+        // Add event listener for changes
+        checkbox.addEventListener('change', function() {
+            const columnIndex = this.dataset.column;
+            const isVisible = this.checked;
+            
+            // Toggle header column
+            const headerCol = document.querySelector(`#projectsTable thead th[data-column="${columnIndex}"]`);
+            if (headerCol) {
+                headerCol.classList.toggle('d-none', !isVisible);
+            }
+            
+            // Toggle body columns
+            const bodyCols = document.querySelectorAll(`#projectsTable tbody td[data-column="${columnIndex}"]`);
+            bodyCols.forEach(col => {
+                col.classList.toggle('d-none', !isVisible);
+            });
+            
+            // Save preferences to localStorage
+            const visibleColumns = Array.from(document.querySelectorAll('.column-toggle:checked')).map(cb => cb.dataset.column);
+            localStorage.setItem('projects-visible-columns', JSON.stringify(visibleColumns));
+        });
+    });
+}
+
+// Initialize everything when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {    
+    // Wait a bit to ensure Bootstrap is fully loaded
+    setTimeout(() => {
+        // Initialize column toggle functionality
+        initColumnToggle();
+        
+        // Also try direct event delegation as fallback
+        document.body.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('column-toggle')) {
+                const checkbox = e.target;
+                const columnIndex = checkbox.dataset.column;
+                const isVisible = checkbox.checked;
+                
+                // Toggle header column
+                const headerCol = document.querySelector(`#projectsTable thead th[data-column="${columnIndex}"]`);
+                if (headerCol) {
+                    headerCol.classList.toggle('d-none', !isVisible);
+                }
+                
+                // Toggle body columns
+                const bodyCols = document.querySelectorAll(`#projectsTable tbody td[data-column="${columnIndex}"]`);
+                bodyCols.forEach(col => {
+                    col.classList.toggle('d-none', !isVisible);
+                });
+                
+                // Save preferences
+                const visibleColumns = Array.from(document.querySelectorAll('.column-toggle:checked')).map(cb => cb.dataset.column);
+                localStorage.setItem('projects-visible-columns', JSON.stringify(visibleColumns));
+            }
+        });
+    }, 100);
+    
+    <?php if ($currentAction === 'create' || $currentAction === 'edit'): ?>
+    // Auto-open modal for create/edit actions
     <?php if ($currentAction === 'edit' && $editProject): ?>
     // Populate form for editing
     document.getElementById('projectModalTitle').textContent = 'Edit Project';
@@ -483,14 +783,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php endif; ?>
     
     new bootstrap.Modal(document.getElementById('projectModal')).show();
+    <?php endif; ?>
 });
-<?php endif; ?>
 </script>
 
 <?php require_once dirname(__FILE__) . '/../includes/footer.php'; ?>
-
-    </main>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="<?php echo ASSETS_URL; ?>/js/main.js"></script>
-</body>
-</html>

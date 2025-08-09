@@ -1,0 +1,27 @@
+## Dashboard Modules Ideas ##
+What I Like that's Already Added
+- Weather Widget
+- Notes Panel
+- Mini Calendar
+- Activity Feed
+- Quick Actions
+- Total Projects
+- Completed Projects
+- Active Tasks
+- Overdue Tasks
+- My Tasks
+- Project Status Overview
+- Task Priority Distribution
+- Recent Projects
+- Upcoming Deadlines
+
+TO Added
+- Total Project Value
+- Other's Tasks (filtering by user)
+- 
+
+
+
+## Dashboard Fixes ##
+For Total Projects, Completed Projects, Active Tasks, and Overdue Tasks, make the grabber for moving them built into the module and not changing the height to add it ontop of the module. AKA keep the size of the module
+

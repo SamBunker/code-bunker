@@ -82,6 +82,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'completed_at' => ($newStatus === 'completed') ? date('Y-m-d H:i:s') : null
                 ];
                 
+                // Handle actual hours based on status change
+                if ($newStatus === 'completed' && (floatval($task['actual_hours']) == 0)) {
+                    // If marking as completed and actual hours is 0, set it to estimated hours
+                    $data['actual_hours'] = floatval($task['estimated_hours']);
+                } elseif ($task['status'] === 'completed' && $newStatus !== 'completed') {
+                    // If changing from completed to any other status, reset actual hours to 0
+                    $data['actual_hours'] = 0;
+                }
+                
                 $result = updateTaskStatus($taskId, $data, $currentUser['id']);
                 $message = $result['message'];
                 $messageType = $result['success'] ? 'success' : 'error';
@@ -334,10 +343,13 @@ if ($currentAction === 'edit' && isset($_GET['id'])) {
                         </td>
                         <td>
                             <div class="dropdown">
-                                <button class="btn btn-sm p-0 border-0 bg-transparent dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <button class="btn btn-sm p-0 border-0 bg-transparent dropdown-toggle" type="button" 
+                                        data-bs-toggle="dropdown" 
+                                        data-bs-boundary="window"
+                                        data-bs-reference="parent">
                                     <?php echo getStatusBadge($task['status'], 'task'); ?>
                                 </button>
-                                <ul class="dropdown-menu">
+                                <ul class="dropdown-menu" style="z-index: 9999; position: fixed;">
                                     <?php foreach (TASK_STATUS as $statusKey => $statusLabel): ?>
                                     <li>
                                         <button class="dropdown-item <?php echo $task['status'] === $statusKey ? 'active' : ''; ?>" 
@@ -572,6 +584,38 @@ function updateTaskStatus(id, status) {
     document.body.appendChild(form);
     form.submit();
 }
+
+// Fix dropdown positioning on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all dropdowns with body container
+    document.querySelectorAll('.dropdown-toggle').forEach(function(toggle) {
+        toggle.addEventListener('show.bs.dropdown', function() {
+            const dropdown = this.nextElementSibling;
+            if (dropdown && dropdown.classList.contains('dropdown-menu')) {
+                // Move dropdown to body to avoid container clipping
+                document.body.appendChild(dropdown);
+                
+                // Position it relative to the toggle button
+                const rect = this.getBoundingClientRect();
+                dropdown.style.position = 'fixed';
+                dropdown.style.top = (rect.bottom + 2) + 'px';
+                dropdown.style.left = rect.left + 'px';
+                dropdown.style.zIndex = '9999';
+            }
+        });
+        
+        toggle.addEventListener('hide.bs.dropdown', function() {
+            const dropdown = document.body.querySelector('.dropdown-menu[style*="position: fixed"]');
+            if (dropdown) {
+                // Move dropdown back to its original position
+                this.parentNode.appendChild(dropdown);
+                dropdown.style.position = '';
+                dropdown.style.top = '';
+                dropdown.style.left = '';
+            }
+        });
+    });
+});
 
 function clearFilters() {
     window.location.href = window.location.pathname;

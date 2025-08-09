@@ -116,6 +116,14 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                         </a>
                     </li>
                     <?php if ($isAdmin): ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo $currentPage === 'templates' ? 'active' : ''; ?>" 
+                           href="<?php echo BASE_URL; ?>/pages/templates.php">
+                            <i class="bi bi-file-earmark-text"></i> Templates
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if ($isAdmin): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-gear"></i> Admin

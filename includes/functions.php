@@ -466,6 +466,11 @@ function updateTaskStatus($taskId, $data, $userId) {
             $params[] = $data['completed_at'];
         }
         
+        if (isset($data['actual_hours'])) {
+            $query .= ", actual_hours = ?";
+            $params[] = $data['actual_hours'];
+        }
+        
         $query .= " WHERE id = ?";
         $params[] = $taskId;
         
@@ -1287,6 +1292,208 @@ function generatePagination($currentPage, $totalPages, $baseUrl) {
     $html .= '</ul></nav>';
     
     return $html;
+}
+
+/**
+ * Project Template Functions
+ */
+
+/**
+ * Get all project templates
+ * @return array|false Array of templates or false on error
+ */
+function getProjectTemplates() {
+    $query = "SELECT pt.*, 
+                     CONCAT(u.first_name, ' ', u.last_name) as created_by_name,
+                     (SELECT COUNT(*) FROM template_tasks tt WHERE tt.template_id = pt.id) as task_count
+              FROM project_templates pt
+              LEFT JOIN users u ON pt.created_by = u.id
+              WHERE pt.is_active = 1
+              ORDER BY pt.created_at DESC";
+    
+    return executeQuery($query) ?: [];
+}
+
+/**
+ * Get a single project template
+ * @param int $templateId Template ID
+ * @return array|false Template data or false if not found
+ */
+function getProjectTemplate($templateId) {
+    $query = "SELECT pt.*, 
+                     CONCAT(u.first_name, ' ', u.last_name) as created_by_name,
+                     (SELECT COUNT(*) FROM template_tasks tt WHERE tt.template_id = pt.id) as task_count
+              FROM project_templates pt
+              LEFT JOIN users u ON pt.created_by = u.id
+              WHERE pt.id = ? AND pt.is_active = 1";
+    
+    $result = executeQuery($query, [$templateId]);
+    return $result ? $result[0] : false;
+}
+
+/**
+ * Create a new project template
+ * @param array $data Template data
+ * @return array Result with success status and message
+ */
+function createProjectTemplate($data) {
+    try {
+        $query = "INSERT INTO project_templates 
+                  (name, description, category, default_priority, estimated_duration_days, estimated_hours, created_by) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+        $result = executeUpdate($query, [
+            $data['name'],
+            $data['description'],
+            $data['category'],
+            $data['default_priority'],
+            $data['estimated_duration_days'],
+            $data['estimated_hours'],
+            $data['created_by']
+        ]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Template created successfully',
+                'template_id' => getDB()->lastInsertId()
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to create template'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error creating template: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Delete a project template and its tasks
+ * @param int $templateId Template ID
+ * @return array Result with success status and message
+ */
+function deleteProjectTemplate($templateId) {
+    try {
+        // First delete template tasks (cascade should handle this, but being explicit)
+        $deleteTasksQuery = "DELETE FROM template_tasks WHERE template_id = ?";
+        executeUpdate($deleteTasksQuery, [$templateId]);
+        
+        // Then delete the template
+        $deleteTemplateQuery = "UPDATE project_templates SET is_active = 0 WHERE id = ?";
+        $result = executeUpdate($deleteTemplateQuery, [$templateId]);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Template deleted successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Template not found or already deleted'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Error deleting template: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Failed to delete template'
+        ];
+    }
+}
+
+/**
+ * Get template tasks for a template
+ * @param int $templateId Template ID
+ * @return array|false Array of template tasks or false on error
+ */
+function getTemplateTasks($templateId) {
+    $query = "SELECT * FROM template_tasks 
+              WHERE template_id = ? 
+              ORDER BY order_index ASC, created_at ASC";
+    
+    return executeQuery($query, [$templateId]) ?: [];
+}
+
+/**
+ * Apply a template to create a new project
+ * @param int $templateId Template ID
+ * @param array $projectData Additional project data
+ * @return array Result with success status and message
+ */
+function applyProjectTemplate($templateId, $projectData) {
+    try {
+        $template = getProjectTemplate($templateId);
+        if (!$template) {
+            return [
+                'success' => false,
+                'message' => 'Template not found'
+            ];
+        }
+        
+        // Create the project with template defaults
+        $projectCreateData = array_merge([
+            'category' => $template['category'],
+            'priority' => $template['default_priority'],
+            'estimated_hours' => $template['estimated_hours']
+        ], $projectData);
+        
+        $projectResult = createProject($projectCreateData);
+        if (!$projectResult['success']) {
+            return $projectResult;
+        }
+        
+        $projectId = $projectResult['project_id'];
+        
+        // Get template tasks and create actual tasks
+        $templateTasks = getTemplateTasks($templateId);
+        $createdTasks = 0;
+        
+        foreach ($templateTasks as $templateTask) {
+            $taskData = [
+                'project_id' => $projectId,
+                'title' => $templateTask['title'],
+                'description' => $templateTask['description'],
+                'task_type' => $templateTask['task_type'],
+                'priority' => $templateTask['priority'],
+                'status' => 'pending',
+                'estimated_hours' => $templateTask['estimated_hours'],
+                'start_date' => null,
+                'due_date' => null
+            ];
+            
+            // Calculate dates based on project start date and days_after_start
+            if ($projectData['start_date'] && $templateTask['days_after_start'] > 0) {
+                $startDate = new DateTime($projectData['start_date']);
+                $startDate->add(new DateInterval('P' . $templateTask['days_after_start'] . 'D'));
+                $taskData['start_date'] = $startDate->format('Y-m-d');
+            }
+            
+            $taskResult = createTask($taskData, $projectData['created_by']);
+            if ($taskResult['success']) {
+                $createdTasks++;
+            }
+        }
+        
+        return [
+            'success' => true,
+            'message' => "Project created successfully from template with {$createdTasks} tasks",
+            'project_id' => $projectId
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Error applying template: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Failed to apply template'
+        ];
+    }
 }
 
 ?>

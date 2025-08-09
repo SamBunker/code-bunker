@@ -378,9 +378,30 @@ if ($myTasks === false) $myTasks = [];
                         </div>
                         <div class="activity-content">
                             <div class="activity-title">
-                                <?php echo htmlspecialchars($activity['user_name']); ?>
-                                <?php echo ucfirst($activity['action']) . 'd'; ?>
-                                <?php echo $activity['entity_type']; ?>
+                                <?php 
+                                echo htmlspecialchars($activity['user_name']); 
+                                $action = $activity['action'];
+                                switch($action) {
+                                    case 'login':
+                                        echo ' logged in';
+                                        break;
+                                    case 'logout':
+                                        echo ' logged out';
+                                        break;
+                                    case 'create':
+                                        echo ' created ' . $activity['entity_type'];
+                                        break;
+                                    case 'update':
+                                        echo ' updated ' . $activity['entity_type'];
+                                        break;
+                                    case 'delete':
+                                        echo ' deleted ' . $activity['entity_type'];
+                                        break;
+                                    default:
+                                        echo ' ' . ucfirst($action) . 'd ' . $activity['entity_type'];
+                                        break;
+                                }
+                                ?>
                             </div>
                             <?php if ($activity['description']): ?>
                             <div class="activity-description">
@@ -635,7 +656,6 @@ function initializeGridDragging() {
     
     panels.forEach(panel => {
         // Make panels draggable in edit mode
-        panel.style.cursor = 'move';
         panel.addEventListener('mousedown', startDrag);
         panel.addEventListener('touchstart', startDrag, { passive: false });
     });
@@ -648,7 +668,6 @@ function destroyGridDragging() {
     const panels = document.querySelectorAll('.dashboard-panel');
     
     panels.forEach(panel => {
-        panel.style.cursor = 'default';
         panel.removeEventListener('mousedown', startDrag);
         panel.removeEventListener('touchstart', startDrag);
     });
@@ -846,6 +865,13 @@ function loadGridLayout() {
     try {
         const layout = JSON.parse(localStorage.getItem('dashboard-grid-layout') || '{}');
         
+        // Check if we have any saved layout
+        if (Object.keys(layout).length === 0) {
+            console.log('No saved grid layout found, applying default layout');
+            applyDefaultLayout();
+            return;
+        }
+        
         Object.keys(layout).forEach(panelId => {
             const panel = document.querySelector(`[data-panel="${panelId}"]`);
             if (panel) {
@@ -859,16 +885,69 @@ function loadGridLayout() {
         
         positionAllPanels();
     } catch (e) {
-        console.log('No saved grid layout found, using defaults');
-        positionAllPanels();
+        console.log('Error loading grid layout, applying default layout');
+        applyDefaultLayout();
     }
+}
+
+function getDefaultLayout() {
+    const screenWidth = window.innerWidth;
+    
+    // Laptop layout (1920x1080 and smaller)
+    if (screenWidth <= 1920) {
+        return {
+            'total-projects': { x: 0, y: 3, width: 7, height: 5, type: 'stat-card' },
+            'completed-projects': { x: 8, y: 3, width: 7, height: 5, type: 'stat-card' },
+            'active-tasks': { x: 16, y: 3, width: 7, height: 5, type: 'stat-card' },
+            'overdue-tasks': { x: 24, y: 3, width: 7, height: 5, type: 'stat-card' },
+            'my-tasks-duplicate': { x: 32, y: 3, width: 12, height: 7, type: 'content' },
+            'project-status-chart': { x: 0, y: 9, width: 15, height: 10, type: 'chart' },
+            'task-priority-chart': { x: 16, y: 9, width: 15, height: 10, type: 'chart' },
+            'recent-projects-duplicate': { x: 0, y: 20, width: 20, height: 12, type: 'content' },
+            'upcoming-deadlines-duplicate': { x: 21, y: 20, width: 15, height: 12, type: 'content' },
+            'recent-activity-duplicate': { x: 37, y: 20, width: 15, height: 12, type: 'content' }
+        };
+    } 
+    // Large screen layout (wider than 1920)
+    else {
+        return {
+            'total-projects': { x: 0, y: 0, width: 6, height: 5, type: 'stat-card' },
+            'completed-projects': { x: 8, y: 0, width: 6, height: 5, type: 'stat-card' },
+            'active-tasks': { x: 16, y: 0, width: 6, height: 5, type: 'stat-card' },
+            'overdue-tasks': { x: 24, y: 0, width: 6, height: 5, type: 'stat-card' },
+            'my-tasks-duplicate': { x: 32, y: 0, width: 12, height: 7, type: 'content' },
+            'project-status-chart': { x: 0, y: 5, width: 14, height: 10, type: 'chart' },
+            'task-priority-chart': { x: 15, y: 5, width: 14, height: 10, type: 'chart' },
+            'recent-projects-duplicate': { x: 0, y: 16, width: 18, height: 12, type: 'content' },
+            'upcoming-deadlines-duplicate': { x: 19, y: 16, width: 14, height: 12, type: 'content' },
+            'recent-activity-duplicate': { x: 34, y: 16, width: 14, height: 12, type: 'content' }
+        };
+    }
+}
+
+function applyDefaultLayout() {
+    const defaultLayout = getDefaultLayout();
+    
+    Object.keys(defaultLayout).forEach(panelId => {
+        const panel = document.querySelector(`[data-panel="${panelId}"]`);
+        if (panel) {
+            const pos = defaultLayout[panelId];
+            panel.setAttribute('data-grid-x', pos.x);
+            panel.setAttribute('data-grid-y', pos.y);
+            panel.setAttribute('data-grid-width', pos.width);
+            panel.setAttribute('data-grid-height', pos.height);
+        }
+    });
+    
+    positionAllPanels();
 }
 
 function resetLayout() {
     localStorage.removeItem('dashboard-grid-layout');
     localStorage.removeItem('dashboard-panels');
     localStorage.removeItem('panel-sizes');
-    location.reload();
+    applyDefaultLayout();
+    AppTracker.showToast('Layout reset to default', 'info');
 }
 
 // Panel Management Functions
@@ -897,7 +976,6 @@ function addPanel(type) {
         
         // Initialize dragging if in edit mode
         if (editMode) {
-            newPanel.style.cursor = 'move';
             newPanel.addEventListener('mousedown', startDrag);
             newPanel.addEventListener('touchstart', startDrag, { passive: false });
         }
