@@ -116,6 +116,7 @@ function createTables($pdo) {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 project_id INT NOT NULL,
                 phase_id INT,
+                order_index INT DEFAULT 0,
                 title VARCHAR(255) NOT NULL,
                 description TEXT,
                 task_type VARCHAR(100) DEFAULT 'General',
@@ -136,6 +137,7 @@ function createTables($pdo) {
                 FOREIGN KEY (depends_on_task_id) REFERENCES tasks(id) ON DELETE SET NULL,
                 INDEX idx_project_id (project_id),
                 INDEX idx_phase_id (phase_id),
+                INDEX idx_order_index (order_index),
                 INDEX idx_status (status),
                 INDEX idx_priority (priority),
                 INDEX idx_due_date (due_date),
@@ -392,17 +394,17 @@ function insertSampleData($pdo) {
         }
         echo "✅ Added sample template phases<br>";
         
-        // Add sample template tasks for Web Application Update template (with phases)
+        // Add sample template tasks for Web Application Update template (clean titles, WBS shown in interface)
         $webAppTasks = [
             ['phase_id' => 1, 'title' => 'Security Assessment', 'description' => 'Perform comprehensive security audit', 'task_type' => 'Security Updates', 'priority' => 'critical', 'estimated_hours' => 16, 'order_index' => 1, 'days_after_start' => 0],
             ['phase_id' => 1, 'title' => 'Requirements Analysis', 'description' => 'Analyze current system and define upgrade requirements', 'task_type' => 'Documentation Updates', 'priority' => 'high', 'estimated_hours' => 12, 'order_index' => 2, 'days_after_start' => 1],
-            ['phase_id' => 2, 'title' => 'Update Framework Dependencies', 'description' => 'Update all framework and library dependencies to latest secure versions', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 3, 'days_after_start' => 3],
-            ['phase_id' => 2, 'title' => 'Database Migration', 'description' => 'Update database schema and migrate data', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 20, 'order_index' => 4, 'days_after_start' => 7],
-            ['phase_id' => 2, 'title' => 'UI/UX Modernization', 'description' => 'Update user interface with modern design patterns', 'task_type' => 'UI/UX Improvements', 'priority' => 'medium', 'estimated_hours' => 32, 'order_index' => 5, 'days_after_start' => 10],
-            ['phase_id' => 2, 'title' => 'Performance Optimization', 'description' => 'Optimize application performance and loading times', 'task_type' => 'Performance Optimization', 'priority' => 'medium', 'estimated_hours' => 16, 'order_index' => 6, 'days_after_start' => 15],
-            ['phase_id' => 3, 'title' => 'Testing & QA', 'description' => 'Comprehensive testing including unit, integration, and user acceptance tests', 'task_type' => 'Testing', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 7, 'days_after_start' => 20],
-            ['phase_id' => 3, 'title' => 'Documentation Update', 'description' => 'Update user and technical documentation', 'task_type' => 'Documentation Updates', 'priority' => 'medium', 'estimated_hours' => 8, 'order_index' => 8, 'days_after_start' => 25],
-            ['phase_id' => 3, 'title' => 'Production Deployment', 'description' => 'Deploy updated application to production environment', 'task_type' => 'Deployment', 'priority' => 'critical', 'estimated_hours' => 12, 'order_index' => 9, 'days_after_start' => 27]
+            ['phase_id' => 2, 'title' => 'Update Framework Dependencies', 'description' => 'Update all framework and library dependencies to latest secure versions', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 1, 'days_after_start' => 3],
+            ['phase_id' => 2, 'title' => 'Database Migration', 'description' => 'Update database schema and migrate data', 'task_type' => 'Version Upgrades', 'priority' => 'high', 'estimated_hours' => 20, 'order_index' => 2, 'days_after_start' => 7],
+            ['phase_id' => 2, 'title' => 'UI/UX Modernization', 'description' => 'Update user interface with modern design patterns', 'task_type' => 'UI/UX Improvements', 'priority' => 'medium', 'estimated_hours' => 32, 'order_index' => 3, 'days_after_start' => 10],
+            ['phase_id' => 2, 'title' => 'Performance Optimization', 'description' => 'Optimize application performance and loading times', 'task_type' => 'Performance Optimization', 'priority' => 'medium', 'estimated_hours' => 16, 'order_index' => 4, 'days_after_start' => 15],
+            ['phase_id' => 3, 'title' => 'Testing & QA', 'description' => 'Comprehensive testing including unit, integration, and user acceptance tests', 'task_type' => 'Testing', 'priority' => 'high', 'estimated_hours' => 24, 'order_index' => 1, 'days_after_start' => 20],
+            ['phase_id' => 3, 'title' => 'Documentation Update', 'description' => 'Update user and technical documentation', 'task_type' => 'Documentation Updates', 'priority' => 'medium', 'estimated_hours' => 8, 'order_index' => 2, 'days_after_start' => 25],
+            ['phase_id' => 3, 'title' => 'Production Deployment', 'description' => 'Deploy updated application to production environment', 'task_type' => 'Deployment', 'priority' => 'critical', 'estimated_hours' => 12, 'order_index' => 3, 'days_after_start' => 27]
         ];
         
         foreach ($webAppTasks as $task) {
@@ -431,10 +433,291 @@ function insertSampleData($pdo) {
     }
 }
 
+function fixExistingDatabase() {
+    echo "<h2>🔧 Applying Database Fixes to Existing Database</h2>";
+    
+    try {
+        $pdo = new PDO("mysql:host=localhost;port=3306;dbname=web_app_tracker;charset=utf8mb4", 'root', '', [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        ]);
+        
+        // Check if order_index column exists in tasks table
+        $result = $pdo->query("SHOW COLUMNS FROM tasks LIKE 'order_index'");
+        if ($result->rowCount() == 0) {
+            echo "Adding missing order_index column to tasks table...<br>";
+            $pdo->exec("ALTER TABLE tasks ADD COLUMN order_index INT DEFAULT 0 AFTER phase_id");
+            $pdo->exec("ALTER TABLE tasks ADD INDEX idx_order_index (order_index)");
+            echo "✅ Added order_index column to tasks table<br>";
+        } else {
+            echo "✅ order_index column already exists in tasks table<br>";
+        }
+        
+        // Check if setting_type column exists in settings table
+        $result = $pdo->query("SHOW COLUMNS FROM settings LIKE 'setting_type'");
+        if ($result->rowCount() == 0) {
+            echo "Adding missing setting_type column to settings table...<br>";
+            $pdo->exec("ALTER TABLE settings ADD COLUMN setting_type ENUM('boolean', 'string', 'number', 'json') DEFAULT 'string' AFTER setting_value");
+            echo "✅ Added setting_type column to settings table<br>";
+        } else {
+            echo "✅ setting_type column already exists in settings table<br>";
+        }
+        
+        // Check if activity_log table exists
+        $result = $pdo->query("SHOW TABLES LIKE 'activity_log'");
+        if ($result->rowCount() == 0) {
+            echo "Creating missing activity_log table...<br>";
+            $pdo->exec("
+                CREATE TABLE activity_log (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    action VARCHAR(100) NOT NULL,
+                    entity_type ENUM('project', 'task', 'note', 'user') NOT NULL,
+                    entity_id INT NOT NULL,
+                    old_values JSON NULL,
+                    new_values JSON NULL,
+                    description TEXT,
+                    ip_address VARCHAR(45),
+                    user_agent TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    INDEX idx_activity_log_created_at_desc (created_at DESC)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+            echo "✅ Created activity_log table<br>";
+        } else {
+            echo "✅ activity_log table already exists<br>";
+        }
+        
+        // Check if project_templates table exists
+        $result = $pdo->query("SHOW TABLES LIKE 'project_templates'");
+        if ($result->rowCount() == 0) {
+            echo "Creating missing project_templates table...<br>";
+            $pdo->exec("
+                CREATE TABLE project_templates (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    category VARCHAR(100) DEFAULT 'General',
+                    default_priority ENUM('critical', 'high', 'medium', 'low') DEFAULT 'medium',
+                    estimated_duration_days INT DEFAULT 0,
+                    estimated_hours DECIMAL(6,2) DEFAULT 0,
+                    created_by INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+                    INDEX idx_name (name),
+                    INDEX idx_category (category),
+                    INDEX idx_is_active (is_active)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+            echo "✅ Created project_templates table<br>";
+        } else {
+            echo "✅ project_templates table already exists<br>";
+        }
+        
+        // Check if template_phases table exists
+        $result = $pdo->query("SHOW TABLES LIKE 'template_phases'");
+        if ($result->rowCount() == 0) {
+            echo "Creating missing template_phases table...<br>";
+            $pdo->exec("
+                CREATE TABLE template_phases (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    template_id INT NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    order_index INT DEFAULT 0,
+                    is_collapsed BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE,
+                    INDEX idx_template_id (template_id),
+                    INDEX idx_order (order_index)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+            echo "✅ Created template_phases table<br>";
+        } else {
+            echo "✅ template_phases table already exists<br>";
+        }
+        
+        // Check if template_tasks table has phase_id column
+        $result = $pdo->query("SHOW COLUMNS FROM template_tasks LIKE 'phase_id'");
+        if ($result->rowCount() == 0) {
+            echo "Adding missing phase_id column to template_tasks table...<br>";
+            $pdo->exec("ALTER TABLE template_tasks ADD COLUMN phase_id INT AFTER template_id");
+            $pdo->exec("ALTER TABLE template_tasks ADD FOREIGN KEY (phase_id) REFERENCES template_phases(id) ON DELETE CASCADE");
+            $pdo->exec("ALTER TABLE template_tasks ADD INDEX idx_phase_id (phase_id)");
+            echo "✅ Added phase_id column to template_tasks table<br>";
+        } else {
+            echo "✅ phase_id column already exists in template_tasks table<br>";
+        }
+        
+        // Check if template_tasks table has order_index column
+        $result = $pdo->query("SHOW COLUMNS FROM template_tasks LIKE 'order_index'");
+        if ($result->rowCount() == 0) {
+            echo "Adding missing order_index column to template_tasks table...<br>";
+            $pdo->exec("ALTER TABLE template_tasks ADD COLUMN order_index INT DEFAULT 0");
+            $pdo->exec("ALTER TABLE template_tasks ADD INDEX idx_order_index (order_index)");
+            echo "✅ Added order_index column to template_tasks table<br>";
+        } else {
+            echo "✅ order_index column already exists in template_tasks table<br>";
+        }
+        
+        // Check if report_templates table exists
+        $result = $pdo->query("SHOW TABLES LIKE 'report_templates'");
+        if ($result->rowCount() == 0) {
+            echo "Creating missing report_templates table...<br>";
+            $pdo->exec("
+                CREATE TABLE report_templates (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    category ENUM('executive', 'operational', 'financial', 'resource', 'custom', 'wbs') DEFAULT 'custom',
+                    report_type VARCHAR(100) NOT NULL,
+                    template_config JSON NOT NULL,
+                    filters_config JSON,
+                    is_public BOOLEAN DEFAULT FALSE,
+                    is_system_template BOOLEAN DEFAULT FALSE,
+                    created_by INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (created_by) REFERENCES users(id),
+                    INDEX idx_category (category),
+                    INDEX idx_report_type (report_type)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+            echo "✅ Created report_templates table<br>";
+        } else {
+            echo "✅ report_templates table already exists<br>";
+        }
+        
+        // Check if work_breakdown_structure table exists
+        $result = $pdo->query("SHOW TABLES LIKE 'work_breakdown_structure'");
+        if ($result->rowCount() == 0) {
+            echo "Creating missing work_breakdown_structure table...<br>";
+            $pdo->exec("
+                CREATE TABLE work_breakdown_structure (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    project_id INT NOT NULL,
+                    parent_id INT NULL,
+                    wbs_code VARCHAR(50) NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    work_package_type ENUM('project', 'deliverable', 'work_package', 'task') DEFAULT 'work_package',
+                    estimated_hours DECIMAL(8,2) DEFAULT 0,
+                    actual_hours DECIMAL(8,2) DEFAULT 0,
+                    estimated_cost DECIMAL(12,2) DEFAULT 0,
+                    actual_cost DECIMAL(12,2) DEFAULT 0,
+                    progress_percentage DECIMAL(5,2) DEFAULT 0,
+                    status ENUM('not_started', 'in_progress', 'completed', 'on_hold', 'cancelled') DEFAULT 'not_started',
+                    priority ENUM('critical', 'high', 'medium', 'low') DEFAULT 'medium',
+                    assigned_to INT,
+                    start_date DATE,
+                    due_date DATE,
+                    completion_date DATE,
+                    created_by INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                    FOREIGN KEY (parent_id) REFERENCES work_breakdown_structure(id) ON DELETE CASCADE,
+                    FOREIGN KEY (assigned_to) REFERENCES users(id),
+                    FOREIGN KEY (created_by) REFERENCES users(id),
+                    INDEX idx_project_id (project_id),
+                    INDEX idx_parent_id (parent_id),
+                    INDEX idx_wbs_code (wbs_code),
+                    INDEX idx_status (status),
+                    UNIQUE KEY unique_wbs_code_per_project (project_id, wbs_code)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+            echo "✅ Created work_breakdown_structure table<br>";
+        } else {
+            echo "✅ work_breakdown_structure table already exists<br>";
+        }
+        
+        // Check if projects table has enhanced reporting columns
+        $enhancedColumns = [
+            'estimated_cost' => 'DECIMAL(12,2) DEFAULT 0',
+            'actual_cost' => 'DECIMAL(12,2) DEFAULT 0',
+            'progress_percentage' => 'DECIMAL(5,2) DEFAULT 0',
+            'health_status' => "ENUM('green', 'yellow', 'red') DEFAULT 'green'",
+            'risk_level' => "ENUM('low', 'medium', 'high', 'critical') DEFAULT 'low'"
+        ];
+        
+        foreach ($enhancedColumns as $column => $definition) {
+            $result = $pdo->query("SHOW COLUMNS FROM projects LIKE '$column'");
+            if ($result->rowCount() == 0) {
+                echo "Adding missing $column column to projects table...<br>";
+                $pdo->exec("ALTER TABLE projects ADD COLUMN $column $definition");
+                echo "✅ Added $column column to projects table<br>";
+            }
+        }
+        
+        // Add indexes for the new columns if they don't exist
+        try {
+            $pdo->exec("ALTER TABLE projects ADD INDEX idx_health_status (health_status)");
+            echo "✅ Added health_status index to projects table<br>";
+        } catch (Exception $e) {
+            // Index might already exist, that's ok
+        }
+        
+        try {
+            $pdo->exec("ALTER TABLE projects ADD INDEX idx_progress (progress_percentage)");
+            echo "✅ Added progress index to projects table<br>";
+        } catch (Exception $e) {
+            // Index might already exist, that's ok
+        }
+        
+        // Insert system report templates
+        $result = $pdo->query("SELECT COUNT(*) as count FROM report_templates WHERE is_system_template = 1");
+        $systemTemplateCount = $result->fetch()['count'];
+        
+        if ($systemTemplateCount == 0) {
+            echo "Adding system report templates...<br>";
+            $systemTemplates = [
+                [
+                    'Executive Dashboard',
+                    'High-level overview for executives and stakeholders',
+                    'executive',
+                    'executive_dashboard',
+                    '{"metrics": ["total_projects", "budget_utilization", "schedule_performance", "team_productivity"], "charts": ["project_status_pie", "budget_trend_line", "milestone_timeline"], "format": "dashboard"}'
+                ],
+                [
+                    'Work Breakdown Structure',
+                    'Hierarchical project breakdown with progress tracking',
+                    'wbs',
+                    'work_breakdown_structure', 
+                    '{"display_type": "hierarchical", "show_progress": true, "show_costs": true, "show_timeline": true, "export_formats": ["pdf", "excel"]}'
+                ]
+            ];
+            
+            foreach ($systemTemplates as $template) {
+                $pdo->prepare("
+                    INSERT INTO report_templates (name, description, category, report_type, template_config, is_public, is_system_template, created_by) 
+                    VALUES (?, ?, ?, ?, ?, TRUE, TRUE, 1)
+                ")->execute($template);
+            }
+            echo "✅ Added system report templates<br>";
+        } else {
+            echo "✅ System report templates already exist<br>";
+        }
+        
+        echo "<div style='background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0;'>";
+        echo "<h3>✅ Database Fixes Applied Successfully!</h3>";
+        echo "<p>Your existing database has been updated with the missing components.</p>";
+        echo "</div>";
+        
+        return true;
+    } catch (PDOException $e) {
+        echo "❌ Error applying database fixes: " . $e->getMessage() . "<br>";
+        return false;
+    }
+}
+
 // Main execution
 echo "<div style='font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;'>";
 
-if (isset($_POST['fix_database'])) {
+if (isset($_POST['fix_existing'])) {
+    fixExistingDatabase();
+} elseif (isset($_POST['fix_database'])) {
     echo "<h2>🔧 Starting Database Recovery Process</h2>";
     
     $pdo = createCleanDatabase();
@@ -467,8 +750,18 @@ if (isset($_POST['fix_database'])) {
     echo "<p><strong>Warning:</strong> This will delete all existing data!</p>";
     echo "</div>";
     
+    echo "<div style='background: #e2e3e5; border: 1px solid #d6d8db; padding: 15px; border-radius: 5px; margin: 20px 0;'>";
+    echo "<h4>💡 Choose Your Fix Option:</h4>";
+    echo "<p><strong>Option 1:</strong> Fix existing database (preserves your data, just adds missing columns/tables)</p>";
+    echo "<p><strong>Option 2:</strong> Complete database rebuild (deletes all data, creates fresh database with sample data)</p>";
+    echo "</div>";
+    
+    echo "<form method='POST' style='margin-bottom: 10px;'>";
+    echo "<button type='submit' name='fix_existing' style='background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px;'>🔧 Fix Existing Database (Recommended)</button>";
+    echo "</form>";
+    
     echo "<form method='POST'>";
-    echo "<button type='submit' name='fix_database' style='background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;'>🔧 Fix Database Now</button>";
+    echo "<button type='submit' name='fix_database' style='background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;'>🗑️ Complete Database Rebuild (Deletes All Data)</button>";
     echo "</form>";
 }
 
