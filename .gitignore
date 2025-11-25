@@ -1,0 +1,22 @@
+# VSCode Counter
+.VSCodeCounter/
+
+# Logs
+logs/*.log
+!logs/.gitkeep
+
+# Backups
+backups/*.sql
+!backups/.gitkeep
+
+# Uploads
+assets/uploads/*
+!assets/uploads/.gitkeep
+
+# Environment files
+.env
+config/local.php
+
+# OS files
+.DS_Store
+Thumbs.db
