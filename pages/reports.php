@@ -7,82 +7,141 @@
  */
 
 $pageTitle = 'Reports & Analytics';
+
+// Handle export functionality BEFORE any output
+$exportFormat = $_GET['export'] ?? null;
+if ($exportFormat) {
+    require_once dirname(__FILE__) . '/../includes/auth.php';
+    require_once dirname(__FILE__) . '/../includes/functions.php';
+    
+    requireLogin();
+    $currentUser = getCurrentUser();
+    
+    // Process form submissions and filters
+    $filters = [];
+    $reportType = $_GET['type'] ?? 'summary';
+
+    if (isset($_GET['start_date']) && !empty($_GET['start_date'])) {
+        $filters['start_date'] = $_GET['start_date'];
+    }
+
+    if (isset($_GET['end_date']) && !empty($_GET['end_date'])) {
+        $filters['end_date'] = $_GET['end_date'];
+    }
+
+    if (isset($_GET['status']) && !empty($_GET['status'])) {
+        $filters['status'] = $_GET['status'];
+    }
+
+    if (isset($_GET['priority']) && !empty($_GET['priority'])) {
+        $filters['priority'] = $_GET['priority'];
+    }
+
+    if (isset($_GET['assigned_to']) && !empty($_GET['assigned_to'])) {
+        $filters['assigned_to'] = $_GET['assigned_to'];
+    }
+
+    // Generate reports based on type
+    $reportData = [];
+
+    switch ($reportType) {
+        case 'project_status':
+            $reportData = generateProjectStatusReport($filters);
+            break;
+        case 'task_completion':
+            $reportData = generateTaskCompletionReport($filters);
+            break;
+        case 'productivity':
+            $reportData = generateProductivityReport($filters);
+            break;
+        case 'timeline':
+            $reportData = generateTimelineReport($filters);
+            break;
+        default:
+            $summary = generateReportSummary($filters);
+            break;
+    }
+
+    // Handle CSV export
+    if ($exportFormat === 'csv' && !empty($reportData)) {
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $reportType . '_report_' . date('Y-m-d') . '.csv"');
+        
+        $output = fopen('php://output', 'w');
+        
+        if (!empty($reportData)) {
+            // Output CSV headers
+            fputcsv($output, array_keys($reportData[0]));
+            
+            // Output data
+            foreach ($reportData as $row) {
+                fputcsv($output, $row);
+            }
+        }
+        
+        fclose($output);
+        exit;
+    }
+}
+
 require_once dirname(__FILE__) . '/../includes/header.php';
 
-requireLogin();
-
-$currentUser = getCurrentUser();
-
-// Process form submissions and filters
-$filters = [];
-$reportType = $_GET['type'] ?? 'summary';
-$exportFormat = $_GET['export'] ?? null;
-
-if (isset($_GET['start_date']) && !empty($_GET['start_date'])) {
-    $filters['start_date'] = $_GET['start_date'];
-}
-
-if (isset($_GET['end_date']) && !empty($_GET['end_date'])) {
-    $filters['end_date'] = $_GET['end_date'];
-}
-
-if (isset($_GET['status']) && !empty($_GET['status'])) {
-    $filters['status'] = $_GET['status'];
-}
-
-if (isset($_GET['priority']) && !empty($_GET['priority'])) {
-    $filters['priority'] = $_GET['priority'];
-}
-
-if (isset($_GET['assigned_to']) && !empty($_GET['assigned_to'])) {
-    $filters['assigned_to'] = $_GET['assigned_to'];
-}
-
-// Generate reports based on type
-$reportData = [];
-$summary = [];
-
-switch ($reportType) {
-    case 'project_status':
-        $reportData = generateProjectStatusReport($filters);
-        break;
-    case 'task_completion':
-        $reportData = generateTaskCompletionReport($filters);
-        break;
-    case 'productivity':
-        $reportData = generateProductivityReport($filters);
-        break;
-    case 'timeline':
-        $reportData = generateTimelineReport($filters);
-        break;
-    default:
-        $summary = generateReportSummary($filters);
-        break;
-}
-
-// Handle export functionality
-if ($exportFormat && !empty($reportData)) {
-    header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="' . $reportType . '_report_' . date('Y-m-d') . '.csv"');
+if (!$exportFormat) {
+    requireLogin();
+    $currentUser = getCurrentUser();
     
-    $output = fopen('php://output', 'w');
-    
-    if (!empty($reportData)) {
-        // Output CSV headers
-        fputcsv($output, array_keys($reportData[0]));
-        
-        // Output data
-        foreach ($reportData as $row) {
-            fputcsv($output, $row);
-        }
+    // Process form submissions and filters for non-export requests
+    $filters = [];
+    $reportType = $_GET['type'] ?? 'summary';
+
+    if (isset($_GET['start_date']) && !empty($_GET['start_date'])) {
+        $filters['start_date'] = $_GET['start_date'];
+    }
+
+    if (isset($_GET['end_date']) && !empty($_GET['end_date'])) {
+        $filters['end_date'] = $_GET['end_date'];
+    }
+
+    if (isset($_GET['status']) && !empty($_GET['status'])) {
+        $filters['status'] = $_GET['status'];
+    }
+
+    if (isset($_GET['priority']) && !empty($_GET['priority'])) {
+        $filters['priority'] = $_GET['priority'];
+    }
+
+    if (isset($_GET['assigned_to']) && !empty($_GET['assigned_to'])) {
+        $filters['assigned_to'] = $_GET['assigned_to'];
+    }
+
+    // Generate reports based on type
+    $reportData = [];
+    $summary = [];
+
+    switch ($reportType) {
+        case 'project_status':
+            $reportData = generateProjectStatusReport($filters);
+            break;
+        case 'task_completion':
+            $reportData = generateTaskCompletionReport($filters);
+            break;
+        case 'productivity':
+            $reportData = generateProductivityReport($filters);
+            break;
+        case 'timeline':
+            $reportData = generateTimelineReport($filters);
+            break;
+        default:
+            $summary = generateReportSummary($filters);
+            break;
     }
     
-    fclose($output);
-    exit;
+    // Get users for filtering
+    $users = getUsers();
+} else {
+    // For export requests, these variables were already set above
+    $users = [];
 }
-
-// Get users for filtering
-$users = getUsers();
 ?>
 
 <div class="row mb-4">
