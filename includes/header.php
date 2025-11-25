@@ -110,9 +110,9 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo $currentPage === 'reports' ? 'active' : ''; ?>" 
-                           href="<?php echo BASE_URL; ?>/pages/reports.php">
-                            <i class="bi bi-graph-up"></i> Reports
+                        <a class="nav-link <?php echo $currentPage === 'advanced_reports' ? 'active' : ''; ?>" 
+                           href="<?php echo BASE_URL; ?>/pages/advanced_reports.php">
+                            <i class="bi bi-graph-up-arrow"></i> Reports
                         </a>
                     </li>
                     <?php if ($isAdmin): ?>

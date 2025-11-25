@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'due_date' => $_POST['due_date'] ?: null
             ];
             
-            $result = createTask($data);
+            $result = createTask($data, $currentUser['id']);
             $message = $result['message'];
             $messageType = $result['success'] ? 'success' : 'error';
             break;

@@ -1129,7 +1129,11 @@ function generatePanelHTML(type) {
                         </div>
                         <div class="card-body text-center">
                             <i class="bi bi-cloud-sun fs-1 text-primary mb-3"></i>
-                            <h5>Weather Widget</h5>
+                            <h5>
+                            
+                            
+                            
+                            idget</h5>
                             <div class="weather-info">
                                 <div class="h3 mb-0">72°F</div>
                                 <div class="text-muted">Partly Cloudy</div>
