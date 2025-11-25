@@ -504,7 +504,17 @@ body {
     border: 2px solid #ffc107;
     box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
     font-weight: 600;
-    animation: pulse-warning 2s infinite;
+    /* Removed animation that might cause display issues */
+    /* animation: pulse-warning 2s infinite; */
+}
+
+/* Force all calendar events to be visible - CRITICAL FIX */
+.calendar-event {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 100 !important;
 }
 
 @keyframes pulse-warning {

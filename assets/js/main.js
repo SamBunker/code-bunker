@@ -301,7 +301,14 @@ window.SearchManager = {
     
     // Update search results
     updateResults: function(searchTerm, filters) {
-        const params = new URLSearchParams();
+        // FIXED: Preserve existing URL parameters (like month/year for calendar)
+        const params = new URLSearchParams(window.location.search);
+        
+        // Remove old search/filter params but keep others (month, year, debug, etc.)
+        const searchFilterKeys = ['search', 'status', 'priority', 'category', 'assigned_to'];
+        searchFilterKeys.forEach(key => params.delete(key));
+        
+        // Add new search/filter params
         if (searchTerm) params.append('search', searchTerm);
         
         Object.keys(filters).forEach(key => {
@@ -314,8 +321,13 @@ window.SearchManager = {
         // Update URL without page reload
         window.history.replaceState({}, '', newUrl);
         
-        // Reload page content (in a real app, this would be AJAX)
-        window.location.reload();
+        // TEMPORARILY DISABLED: Don't reload if we're on calendar page to preserve navigation
+        if (currentPage.includes('calendar.php')) {
+            console.log('Calendar page detected - skipping reload to preserve navigation');
+        } else {
+            // Reload page content (in a real app, this would be AJAX)
+            window.location.reload();
+        }
     }
 };
 
@@ -405,12 +417,19 @@ window.CalendarManager = {
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     AppTracker.init();
-    SearchManager.init();
     
-    // Initialize calendar if on calendar page
-    if (document.querySelector('.calendar-grid')) {
-        CalendarManager.init();
+    // Don't initialize SearchManager on calendar page to prevent navigation interference
+    if (!window.location.pathname.includes('calendar.php')) {
+        SearchManager.init();
+    } else {
+        console.log('Calendar page detected - SearchManager disabled to preserve navigation');
     }
+    
+    // TEMPORARILY DISABLED - Calendar initialization causing navigation issues
+    // Initialize calendar if on calendar page
+    // if (document.querySelector('.calendar-grid')) {
+    //     CalendarManager.init();
+    // }
 });
 
 // Export for use in other scripts
