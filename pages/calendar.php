@@ -6,6 +6,23 @@
  * Interactive calendar showing project deadlines and task timelines
  */
 
+// Redirect to current month/year if no parameters provided (MUST be before any output)
+if (!isset($_GET['month']) || !isset($_GET['year'])) {
+    $currentMonth = date('n');
+    $currentYear = date('Y');
+    
+    // Preserve any existing URL parameters (like debug)
+    $queryParams = $_GET;
+    $queryParams['month'] = $currentMonth;
+    $queryParams['year'] = $currentYear;
+    
+    $redirectUrl = $_SERVER['PHP_SELF'] . '?' . http_build_query($queryParams);
+    
+    
+    header('Location: ' . $redirectUrl);
+    exit();
+}
+
 $pageTitle = 'Calendar';
 require_once dirname(__FILE__) . '/../includes/header.php';
 
@@ -57,9 +74,11 @@ $calendarQuery = "
         p.id,
         p.name as title,
         p.due_date as date,
+        p.start_date,
         p.priority,
         p.status,
-        p.category as description
+        p.category as description,
+        'due_date' as date_type
     FROM projects p 
     WHERE p.due_date BETWEEN ? AND ?
     
@@ -70,9 +89,11 @@ $calendarQuery = "
         t.id,
         t.title,
         t.due_date as date,
+        t.start_date,
         t.priority,
         t.status,
-        p.name as description
+        p.name as description,
+        'due_date' as date_type
     FROM tasks t
     JOIN projects p ON t.project_id = p.id
     WHERE t.due_date BETWEEN ? AND ?
@@ -82,7 +103,7 @@ $calendarQuery = "
 
 $calendarEvents = executeQuery($calendarQuery, [$startDate, $endDate, $startDate, $endDate]) ?: [];
 
-// Also get upcoming deadlines to show on sidebar
+// Also get upcoming deadlines to show on sidebar  
 $upcomingEvents = executeQuery($calendarQuery, [date('Y-m-d'), $extendedEndDate, date('Y-m-d'), $extendedEndDate]) ?: [];
 
 // Group events by date
@@ -94,6 +115,7 @@ foreach ($calendarEvents as $event) {
     }
     $eventsByDate[$date][] = $event;
 }
+
 
 // Get month name
 $monthName = date('F Y', mktime(0, 0, 0, $currentMonth, 1, $currentYear));
@@ -412,12 +434,221 @@ $upcomingDeadlines = executeQuery($upcomingQuery) ?: [];
 // Calendar events data (passed from PHP)
 const calendarEvents = <?php echo json_encode($calendarEvents); ?>;
 
-function navigateMonth(year, month) {
+async function navigateMonth(year, month) {
+    console.log(`Navigating to: ${year}/${month}`);
+    
     // Ensure we maintain any existing URL parameters
     const url = new URL(window.location);
     url.searchParams.set('month', month);
     url.searchParams.set('year', year);
-    window.location.href = url.toString();
+    
+    console.log('Navigation URL:', url.toString());
+    
+    // Try to load new calendar data via AJAX first
+    try {
+        // Add a loading indicator
+        const calendarContainer = document.querySelector('.calendar-container');
+        if (!calendarContainer) {
+            console.error('Calendar container not found, doing page reload');
+            window.location.href = url.toString();
+            return;
+        }
+        
+        const originalHTML = calendarContainer.innerHTML;
+        calendarContainer.innerHTML = '<div class="text-center p-5"><i class="bi bi-hourglass-split"></i> Loading calendar...</div>';
+        
+        console.log('Fetching calendar data via AJAX...');
+        
+        // Fetch new calendar data with timeout
+        const response = await Promise.race([
+            fetch(url.toString()),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Request timeout')), 5000)
+            )
+        ]);
+        
+        console.log('AJAX Response status:', response.status, response.ok);
+        
+        if (response.ok) {
+            const html = await response.text();
+            console.log('Received HTML length:', html.length);
+            
+            // Extract just the calendar section from the response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newCalendarContent = doc.querySelector('.calendar-container');
+            
+            if (newCalendarContent) {
+                console.log('Successfully extracted calendar content');
+                calendarContainer.innerHTML = newCalendarContent.innerHTML;
+                
+                // CRITICAL FIX: Update the calendarEvents JavaScript variable with new month's data
+                // Extract the new events data from the script tag in the response
+                const scriptContent = html.match(/const calendarEvents = (\[.*?\]);/s);
+                if (scriptContent && scriptContent[1]) {
+                    try {
+                        // Update the global calendarEvents variable with new month's data
+                        window.calendarEvents = JSON.parse(scriptContent[1]);
+                        console.log('Updated calendarEvents:', window.calendarEvents.length, 'events');
+                    } catch (e) {
+                        console.warn('Failed to parse new calendar events data:', e);
+                    }
+                } else {
+                    console.warn('No calendarEvents data found in response');
+                }
+                
+                // CRITICAL FIX: Update the month name and navigation buttons
+                console.log('Updating calendar header...');
+                updateCalendarHeader(year, month);
+                
+                // CRITICAL FIX: Update Quick Navigation month buttons
+                console.log('Updating Quick Navigation buttons...');
+                updateQuickNavigationButtons(month);
+                
+                // Update statistics in sidebar
+                console.log('Updating statistics...');
+                updateCalendarStatistics();
+                
+                // Update URL without page refresh (do this AFTER successful update)
+                window.history.pushState({month: month, year: year}, '', url.toString());
+                console.log('Updated browser URL');
+                
+                // Re-initialize tooltips for new events
+                const newEvents = calendarContainer.querySelectorAll('.calendar-event');
+                newEvents.forEach(event => {
+                    new bootstrap.Tooltip(event);
+                });
+                
+                console.log('AJAX navigation completed successfully!');
+            } else {
+                throw new Error('Calendar content not found in response');
+            }
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+    } catch (error) {
+        console.log('AJAX navigation failed, falling back to page reload:', error.message);
+        
+        // Fallback: Store scroll position and do page reload
+        sessionStorage.setItem('calendarScrollY', window.scrollY);
+        
+        // Force complete page reload with new URL
+        console.log('Redirecting to:', url.toString());
+        window.location.href = url.toString();
+        
+        // If that doesn't work, try window.location.replace
+        setTimeout(() => {
+            console.log('Backup redirect attempt...');
+            window.location.replace(url.toString());
+        }, 100);
+    }
+}
+
+function updateCalendarHeader(year, month) {
+    console.log(`updateCalendarHeader called with: ${year}/${month}`);
+    
+    // Update month display
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthDisplay = document.querySelector('.calendar-month');
+    
+    console.log('Month display element found:', !!monthDisplay);
+    
+    if (monthDisplay) {
+        const newText = `${monthNames[month - 1]} ${year}`;
+        console.log('Updating month display to:', newText);
+        monthDisplay.textContent = newText;
+        console.log('Month display updated. Current text:', monthDisplay.textContent);
+    } else {
+        console.error('Could not find .calendar-month element');
+    }
+    
+    // Calculate previous month/year
+    let prevMonth = month - 1;
+    let prevYear = year;
+    if (prevMonth < 1) {
+        prevMonth = 12;
+        prevYear = year - 1;
+    }
+    
+    // Calculate next month/year
+    let nextMonth = month + 1;
+    let nextYear = year;
+    if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear = year + 1;
+    }
+    
+    console.log(`Navigation will be: Prev(${prevYear}/${prevMonth}) Next(${nextYear}/${nextMonth})`);
+    
+    // Update navigation buttons
+    const prevButton = document.querySelector('.btn-prev-month');
+    const nextButton = document.querySelector('.btn-next-month');
+    
+    console.log('Navigation buttons found:', 'Prev:', !!prevButton, 'Next:', !!nextButton);
+    
+    if (prevButton) {
+        prevButton.onclick = () => navigateMonth(prevYear, prevMonth);
+        console.log('Updated prev button onclick');
+    }
+    
+    if (nextButton) {
+        nextButton.onclick = () => navigateMonth(nextYear, nextMonth);
+        console.log('Updated next button onclick');
+    }
+    
+    console.log('updateCalendarHeader completed');
+}
+
+function updateQuickNavigationButtons(currentMonth) {
+    console.log(`Updating Quick Navigation buttons for month: ${currentMonth}`);
+    
+    // Find all month buttons in Quick Navigation
+    const monthButtons = document.querySelectorAll('[data-month]');
+    console.log('Found month buttons:', monthButtons.length);
+    
+    monthButtons.forEach(button => {
+        const buttonMonth = parseInt(button.getAttribute('data-month'));
+        
+        if (buttonMonth === currentMonth) {
+            // Add active class to current month
+            button.classList.add('active');
+            console.log(`Added active class to month ${buttonMonth}`);
+        } else {
+            // Remove active class from other months
+            button.classList.remove('active');
+        }
+    });
+    
+    console.log('Quick Navigation buttons updated');
+}
+
+function updateCalendarStatistics() {
+    console.log('Updating calendar statistics...');
+    
+    // Use updated events data if available
+    const events = window.calendarEvents || calendarEvents;
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Calculate statistics
+    const projectCount = events.filter(e => e.type === 'project').length;
+    const taskCount = events.filter(e => e.type === 'task').length;
+    const overdueCount = events.filter(e => e.date < today && e.status !== 'completed').length;
+    
+    console.log(`Statistics: ${projectCount} projects, ${taskCount} tasks, ${overdueCount} overdue`);
+    
+    // Update the statistics display
+    const statsElements = document.querySelectorAll('.card-body .row.text-center .col-4 .h4');
+    console.log('Found stats elements:', statsElements.length);
+    
+    if (statsElements.length >= 3) {
+        statsElements[0].textContent = projectCount;
+        statsElements[1].textContent = taskCount;
+        statsElements[2].textContent = overdueCount;
+        console.log('Statistics updated successfully');
+    } else {
+        console.warn('Could not find statistics elements to update');
+    }
 }
 
 function showToday() {
@@ -426,7 +657,8 @@ function showToday() {
 }
 
 function showDayEvents(date) {
-    const events = calendarEvents.filter(event => event.date === date);
+    // Use the global calendarEvents variable (may be updated via AJAX navigation)
+    const events = (window.calendarEvents || calendarEvents).filter(event => event.date === date);
     const modal = document.getElementById('dayEventsModal');
     const title = document.getElementById('dayEventsModalTitle');
     const body = document.getElementById('dayEventsModalBody');
@@ -440,10 +672,10 @@ function showDayEvents(date) {
         day: 'numeric' 
     });
     
-    title.textContent = `Events for ${formattedDate}`;
+    title.textContent = `Due Dates for ${formattedDate}`;
     
     if (events.length === 0) {
-        body.innerHTML = '<p class="text-muted text-center">No events scheduled for this day.</p>';
+        body.innerHTML = '<p class="text-muted text-center">No due dates for this day.</p>';
     } else {
         let html = '';
         events.forEach(event => {
@@ -452,18 +684,46 @@ function showDayEvents(date) {
             const statusBadge = getStatusBadgeHtml(event.status, event.type);
             const priorityBadge = getPriorityBadgeHtml(event.priority);
             
+            // Format dates for display
+            const dueDateFormatted = new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            let startDateInfo = '';
+            if (event.start_date && event.start_date !== event.date) {
+                const startDateFormatted = new Date(event.start_date + 'T00:00:00').toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short', 
+                    day: 'numeric'
+                });
+                startDateInfo = `<small class="text-muted d-block"><i class="bi bi-play-fill me-1"></i>Started: ${startDateFormatted}</small>`;
+            }
+            
             html += `
                 <div class="border-start border-4 border-${getPriorityColor(event.priority)} ps-3 mb-3">
                     <div class="d-flex justify-content-between align-items-start">
-                        <div>
+                        <div class="flex-grow-1">
                             <h6 class="mb-1">
                                 <i class="bi bi-${icon} me-1"></i>
                                 ${escapeHtml(event.title)}
                             </h6>
-                            <p class="mb-1 text-muted small">${escapeHtml(event.description)}</p>
+                            <p class="mb-2 text-muted small">${escapeHtml(event.description)}</p>
+                            
+                            <!-- Date Information -->
+                            <div class="mb-2">
+                                <small class="text-danger fw-bold">
+                                    <i class="bi bi-calendar-x me-1"></i>Due: ${dueDateFormatted}
+                                </small>
+                                ${startDateInfo}
+                            </div>
+                            
+                            <!-- Status and Priority Badges -->
                             <div>
                                 ${statusBadge}
                                 ${priorityBadge}
+                                <span class="badge bg-secondary ms-1">${event.type}</span>
                             </div>
                         </div>
                     </div>
@@ -533,8 +793,9 @@ function showMonthView() {
 }
 
 function generateAgendaHTML() {
-    // Sort events by date
-    const sortedEvents = [...calendarEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Sort events by date (use updated events if available)
+    const events = window.calendarEvents || calendarEvents;
+    const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
     
     if (sortedEvents.length === 0) {
         return '<div class="text-center p-4"><i class="bi bi-calendar-x fs-1 text-muted"></i><p class="text-muted mt-2">No events this month</p></div>';
@@ -691,6 +952,14 @@ function getPriorityColor(priority) {
 
 // Add hover effects and tooltips
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // Restore scroll position if we navigated via calendar navigation
+    const savedScrollY = sessionStorage.getItem('calendarScrollY');
+    if (savedScrollY) {
+        window.scrollTo(0, parseInt(savedScrollY));
+        sessionStorage.removeItem('calendarScrollY');
+    }
+    
     // Add tooltips to calendar events
     const events = document.querySelectorAll('.calendar-event');
     events.forEach(event => {
@@ -700,25 +969,40 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize upcoming deadlines toggle state
     const showDeadlines = localStorage.getItem('showUpcomingDeadlines') !== '0';
     const toggle = document.getElementById('showDeadlinesToggle');
+    
+    // Ensure all events are visible on initial load
+    const calendarEvents = document.querySelectorAll('.calendar-event');
+    calendarEvents.forEach((event) => {
+        event.style.display = 'block';
+        event.style.visibility = 'visible';
+        event.style.opacity = '1';
+    });
+    
     if (toggle) {
+        // Set toggle to match localStorage or default to checked
         toggle.checked = showDeadlines;
+        
+        // Only hide events if user specifically disabled them AND they're upcoming deadlines
         if (!showDeadlines) {
-            toggleUpcomingDeadlines();
+            calendarEvents.forEach(event => {
+                const dayElement = event.closest('.calendar-day');
+                if (dayElement && dayElement.dataset.date) {
+                    const today = new Date();
+                    const eventDate = new Date(dayElement.dataset.date);
+                    const daysDiff = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysDiff >= 0 && daysDiff <= 30) {
+                        event.style.display = 'none';
+                    }
+                }
+            });
         }
     }
     
-    // Initialize calendar view preference
+    // Initialize calendar view preference  
     const savedView = localStorage.getItem('calendarView') || 'month';
     if (savedView === 'agenda') {
         switchView('agenda');
-    }
-    
-    // Highlight today if it's in the current month
-    const today = new Date();
-    const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const todayCell = document.querySelector(`[data-date="${currentDate}"]`);
-    if (todayCell) {
-        todayCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 });
 </script>
