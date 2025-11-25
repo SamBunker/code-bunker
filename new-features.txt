@@ -18,21 +18,9 @@ What I Like that's Already Added
 TO Added
 - Total Project Value
 - Other's Tasks (filtering by user)
-- Health (Time (% ahead or behind schedule), % under or over budget)
-- Add Projects to the Dashboard (Add)
-- Portfolio
-- Workload (% of tasks per user)
-- Show all current risks (also filter per project or customer)
 
-## Code Bunker Project Adds ##
-- The ability to go over budget/hours
-- In settings, adding hourly cost per user. Which is factored into budget
-- Add Customers (Create projects under customers)
-- Ability to add more Dashboard height (grid) dynamically by the user. Probably by 25vh limits
-- On Task Update or Completion, prepare a message to send through email (also option for Discord Webhooks)
-- Add section in projects to add risks / issues
+
 
 
 ## Dashboard Fixes ##
 For Total Projects, Completed Projects, Active Tasks, and Overdue Tasks, make the grabber for moving them built into the module and not changing the height to add it ontop of the module. AKA keep the size of the module
-
