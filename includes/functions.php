@@ -324,15 +324,17 @@ function getTask($taskId) {
  * @param array $data Task data
  * @return array Result with success status and task ID
  */
-function createTask($data) {
+function createTask($data, $userId = null) {
     try {
-        $query = "INSERT INTO tasks (project_id, title, description, task_type, priority, status, 
+        $query = "INSERT INTO tasks (project_id, phase_id, order_index, title, description, task_type, priority, status, 
                   assigned_to, depends_on_task_id, estimated_hours, start_date, due_date) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $params = [
-            $data['project_id'],
-            $data['title'],
+            $data['project_id'] ?? null,
+            $data['phase_id'] ?? null,
+            $data['order_index'] ?? 0,
+            $data['title'] ?? '',
             $data['description'] ?? '',
             $data['task_type'] ?? 'General',
             $data['priority'] ?? 'medium',
@@ -389,14 +391,16 @@ function updateTask($taskId, $data, $userId) {
             ];
         }
         
-        $query = "UPDATE tasks SET project_id = ?, title = ?, description = ?, task_type = ?, 
+        $query = "UPDATE tasks SET project_id = ?, phase_id = ?, order_index = ?, title = ?, description = ?, task_type = ?, 
                   priority = ?, status = ?, assigned_to = ?, depends_on_task_id = ?, 
                   estimated_hours = ?, actual_hours = ?, start_date = ?, due_date = ?, 
                   updated_at = NOW() WHERE id = ?";
         
         $params = [
-            $data['project_id'],
-            $data['title'],
+            $data['project_id'] ?? null,
+            $data['phase_id'] ?? null,
+            $data['order_index'] ?? 0,
+            $data['title'] ?? '',
             $data['description'] ?? '',
             $data['task_type'] ?? 'General',
             $data['priority'] ?? 'medium',
@@ -653,11 +657,12 @@ function updateProjectTemplate($templateId, $data) {
 function createTemplateTask($data) {
     try {
         $query = "INSERT INTO template_tasks 
-                  (template_id, title, description, task_type, priority, estimated_hours, order_index, days_after_start) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                  (template_id, phase_id, title, description, task_type, priority, estimated_hours, order_index, days_after_start) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $result = executeUpdate($query, [
             $data['template_id'],
+            $data['phase_id'] ?? null,
             $data['title'],
             $data['description'],
             $data['task_type'],
@@ -697,7 +702,7 @@ function updateTemplateTask($taskId, $data) {
     try {
         $query = "UPDATE template_tasks 
                   SET title = ?, description = ?, task_type = ?, priority = ?, 
-                      estimated_hours = ?, order_index = ?, days_after_start = ?
+                      estimated_hours = ?, order_index = ?, days_after_start = ?, phase_id = ?
                   WHERE id = ?";
         
         $result = executeUpdate($query, [
@@ -708,6 +713,7 @@ function updateTemplateTask($taskId, $data) {
             $data['estimated_hours'],
             $data['order_index'],
             $data['days_after_start'],
+            $data['phase_id'] ?? null,
             $taskId
         ]);
         
@@ -1578,9 +1584,11 @@ function deleteProjectTemplate($templateId) {
  * @return array|false Array of template tasks or false on error
  */
 function getTemplateTasks($templateId) {
-    $query = "SELECT * FROM template_tasks 
-              WHERE template_id = ? 
-              ORDER BY order_index ASC, created_at ASC";
+    $query = "SELECT t.*, p.name as phase_name
+              FROM template_tasks t 
+              LEFT JOIN template_phases p ON t.phase_id = p.id
+              WHERE t.template_id = ? 
+              ORDER BY COALESCE(t.phase_id, 999), t.order_index ASC, t.created_at ASC";
     
     return executeQuery($query, [$templateId]) ?: [];
 }
@@ -1615,19 +1623,54 @@ function applyProjectTemplate($templateId, $projectData) {
         
         $projectId = $projectResult['project_id'];
         
-        // Get template tasks and create actual tasks
+        // Get template phases and create corresponding project phases
+        $templatePhases = getTemplatePhases($templateId);
+        $phaseMapping = []; // Map template_phase_id => project_phase_id
+        $createdPhases = 0;
+        
+        foreach ($templatePhases as $templatePhase) {
+            $phaseData = [
+                'project_id' => $projectId,
+                'name' => $templatePhase['name'],
+                'description' => $templatePhase['description'],
+                'order_index' => $templatePhase['order_index'],
+                'is_collapsed' => false
+            ];
+            
+            $result = executeUpdate(
+                "INSERT INTO project_phases (project_id, name, description, order_index, is_collapsed) VALUES (?, ?, ?, ?, ?)",
+                [$phaseData['project_id'], $phaseData['name'], $phaseData['description'], $phaseData['order_index'], $phaseData['is_collapsed']]
+            );
+            
+            if ($result) {
+                $database = getDatabase();
+                $newPhaseId = $database->getLastInsertId();
+                $phaseMapping[$templatePhase['id']] = $newPhaseId;
+                $createdPhases++;
+            }
+        }
+        
+        // Get template tasks and create actual tasks with proper phase assignments
         $templateTasks = getTemplateTasks($templateId);
         $createdTasks = 0;
         
         foreach ($templateTasks as $templateTask) {
+            // Map template phase_id to actual project phase_id
+            $projectPhaseId = null;
+            if ($templateTask['phase_id'] && isset($phaseMapping[$templateTask['phase_id']])) {
+                $projectPhaseId = $phaseMapping[$templateTask['phase_id']];
+            }
+            
             $taskData = [
                 'project_id' => $projectId,
+                'phase_id' => $projectPhaseId,
                 'title' => $templateTask['title'],
                 'description' => $templateTask['description'],
                 'task_type' => $templateTask['task_type'],
                 'priority' => $templateTask['priority'],
                 'status' => 'pending',
                 'estimated_hours' => $templateTask['estimated_hours'],
+                'order_index' => $templateTask['order_index'],
                 'start_date' => null,
                 'due_date' => null
             ];
@@ -1647,7 +1690,7 @@ function applyProjectTemplate($templateId, $projectData) {
         
         return [
             'success' => true,
-            'message' => "Project created successfully from template with {$createdTasks} tasks",
+            'message' => "Project created successfully from template with {$createdPhases} phases and {$createdTasks} tasks",
             'project_id' => $projectId
         ];
         
@@ -1953,6 +1996,795 @@ function moveProjectPhase($phaseId, $direction) {
             'success' => false,
             'message' => 'Database error occurred'
         ];
+    }
+}
+
+/**
+ * Move task up or down within its phase
+ * @param int $taskId Task ID
+ * @param string $direction 'up' or 'down'
+ * @return array Result with success status and message
+ */
+function moveTaskWithinPhase($taskId, $direction) {
+    try {
+        // Get current task details
+        $currentTask = executeQuerySingle(
+            "SELECT id, phase_id, order_index, project_id FROM tasks WHERE id = ?", 
+            [$taskId]
+        );
+        
+        if (!$currentTask) {
+            return [
+                'success' => false,
+                'message' => 'Task not found'
+            ];
+        }
+        
+        $currentOrder = $currentTask['order_index'];
+        $phaseId = $currentTask['phase_id'];
+        $projectId = $currentTask['project_id'];
+        
+        if ($direction === 'up') {
+            // Find the task with the next lower order_index in the same phase
+            $targetTask = executeQuerySingle(
+                "SELECT id, order_index FROM tasks 
+                 WHERE project_id = ? AND (phase_id = ? OR (phase_id IS NULL AND ? IS NULL))
+                 AND order_index < ? 
+                 ORDER BY order_index DESC LIMIT 1", 
+                [$projectId, $phaseId, $phaseId, $currentOrder]
+            );
+        } else { // down
+            // Find the task with the next higher order_index in the same phase
+            $targetTask = executeQuerySingle(
+                "SELECT id, order_index FROM tasks 
+                 WHERE project_id = ? AND (phase_id = ? OR (phase_id IS NULL AND ? IS NULL))
+                 AND order_index > ? 
+                 ORDER BY order_index ASC LIMIT 1", 
+                [$projectId, $phaseId, $phaseId, $currentOrder]
+            );
+        }
+        
+        if (!$targetTask) {
+            return [
+                'success' => false,
+                'message' => 'Cannot move task further ' . $direction
+            ];
+        }
+        
+        // Swap the order_index values
+        $targetOrder = $targetTask['order_index'];
+        $targetId = $targetTask['id'];
+        
+        // Update both tasks
+        executeUpdate("UPDATE tasks SET order_index = ? WHERE id = ?", [$targetOrder, $taskId]);
+        executeUpdate("UPDATE tasks SET order_index = ? WHERE id = ?", [$currentOrder, $targetId]);
+        
+        return [
+            'success' => true,
+            'message' => 'Task moved ' . $direction . ' successfully'
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Error moving task: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Move task to a different phase within the same project
+ * @param int $taskId Task ID
+ * @param int|null $newPhaseId New phase ID (null for unassigned)
+ * @return array Result with success status and message
+ */
+function moveTaskToPhase($taskId, $newPhaseId) {
+    try {
+        // Get current task details
+        $currentTask = executeQuerySingle(
+            "SELECT id, phase_id, project_id FROM tasks WHERE id = ?", 
+            [$taskId]
+        );
+        
+        if (!$currentTask) {
+            return [
+                'success' => false,
+                'message' => 'Task not found'
+            ];
+        }
+        
+        $projectId = $currentTask['project_id'];
+        
+        // Validate that the new phase belongs to the same project (if not null)
+        if ($newPhaseId !== null) {
+            $phase = executeQuerySingle(
+                "SELECT id FROM project_phases WHERE id = ? AND project_id = ?", 
+                [$newPhaseId, $projectId]
+            );
+            
+            if (!$phase) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid phase for this project'
+                ];
+            }
+        }
+        
+        // Get the highest order_index in the target phase
+        $maxOrderQuery = "SELECT MAX(order_index) as max_order FROM tasks 
+                         WHERE project_id = ? AND (phase_id = ? OR (phase_id IS NULL AND ? IS NULL))";
+        $maxOrderResult = executeQuerySingle($maxOrderQuery, [$projectId, $newPhaseId, $newPhaseId]);
+        $newOrderIndex = ($maxOrderResult['max_order'] ?? 0) + 1;
+        
+        // Update the task
+        $result = executeUpdate(
+            "UPDATE tasks SET phase_id = ?, order_index = ? WHERE id = ?", 
+            [$newPhaseId, $newOrderIndex, $taskId]
+        );
+        
+        if ($result) {
+            $phaseName = $newPhaseId ? 
+                executeQuerySingle("SELECT name FROM project_phases WHERE id = ?", [$newPhaseId])['name'] ?? 'Unknown Phase' :
+                'Unassigned Tasks';
+                
+            return [
+                'success' => true,
+                'message' => "Task moved to {$phaseName} successfully"
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to move task'
+            ];
+        }
+        
+    } catch (Exception $e) {
+        error_log("Error moving task to phase: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Reorder tasks within a phase or project
+ * @param array $taskIds Array of task IDs in the desired order
+ * @param int|null $phaseId Phase ID (null for unassigned tasks)
+ * @param int $projectId Project ID
+ * @return array Result with success status and message
+ */
+function reorderTasks($taskIds, $phaseId, $projectId) {
+    try {
+        // Validate that all tasks belong to the specified project and phase
+        $placeholders = str_repeat('?,', count($taskIds) - 1) . '?';
+        $validateQuery = "SELECT COUNT(*) as count FROM tasks 
+                         WHERE id IN ($placeholders) 
+                         AND project_id = ? 
+                         AND (phase_id = ? OR (phase_id IS NULL AND ? IS NULL))";
+        $params = array_merge($taskIds, [$projectId, $phaseId, $phaseId]);
+        $validation = executeQuerySingle($validateQuery, $params);
+        
+        if ($validation['count'] != count($taskIds)) {
+            return [
+                'success' => false,
+                'message' => 'Invalid tasks for reordering'
+            ];
+        }
+        
+        // Update order_index for each task
+        foreach ($taskIds as $index => $taskId) {
+            executeUpdate("UPDATE tasks SET order_index = ? WHERE id = ?", [$index + 1, $taskId]);
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'Tasks reordered successfully'
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Error reordering tasks: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred'
+        ];
+    }
+}
+
+/**
+ * Get template tasks grouped by phase
+ */
+function getTemplateTasksByPhase($templateId) {
+    try {
+        $sql = "SELECT t.*, p.name as phase_name 
+                FROM template_tasks t 
+                LEFT JOIN template_phases p ON t.phase_id = p.id 
+                WHERE t.template_id = ? 
+                ORDER BY COALESCE(t.phase_id, 999), t.order_index, t.id";
+        
+        $tasks = executeQuery($sql, [$templateId]);
+        if (!$tasks) return [];
+        
+        // Group tasks by phase
+        $grouped = [];
+        foreach ($tasks as $task) {
+            $phaseId = $task['phase_id'] ?? 'no_phase';
+            if (!isset($grouped[$phaseId])) {
+                $grouped[$phaseId] = [
+                    'phase_id' => $phaseId,
+                    'phase_name' => $task['phase_name'] ?? 'Unassigned Tasks',
+                    'tasks' => []
+                ];
+            }
+            $grouped[$phaseId]['tasks'][] = $task;
+        }
+        
+        return $grouped;
+        
+    } catch (Exception $e) {
+        error_log("Error getting template tasks by phase: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Move template task within phase (up/down)
+ */
+function moveTemplateTaskWithinPhase($taskId, $direction) {
+    try {
+        // Get current task info
+        $task = executeQuerySingle("SELECT template_id, phase_id, order_index FROM template_tasks WHERE id = ?", [$taskId]);
+        
+        if (!$task) {
+            return ['success' => false, 'message' => 'Template task not found'];
+        }
+        
+        $currentOrder = $task['order_index'];
+        $phaseId = $task['phase_id'];
+        $templateId = $task['template_id'];
+        
+        // Find adjacent task to swap with
+        $targetOrder = ($direction === 'up') ? $currentOrder - 1 : $currentOrder + 1;
+        
+        $phaseCondition = $phaseId ? "phase_id = ?" : "phase_id IS NULL";
+        $params = $phaseId ? [$templateId, $phaseId, $targetOrder] : [$templateId, $targetOrder];
+        
+        $adjacentTask = executeQuerySingle("SELECT id FROM template_tasks WHERE template_id = ? AND $phaseCondition AND order_index = ?", $params);
+        
+        if (!$adjacentTask) {
+            return ['success' => false, 'message' => 'Cannot move task in that direction'];
+        }
+        
+        // Swap order_index values
+        executeUpdate("UPDATE template_tasks SET order_index = ? WHERE id = ?", [$targetOrder, $taskId]);
+        executeUpdate("UPDATE template_tasks SET order_index = ? WHERE id = ?", [$currentOrder, $adjacentTask['id']]);
+        
+        return ['success' => true, 'message' => 'Template task moved successfully'];
+        
+    } catch (Exception $e) {
+        error_log("Error moving template task within phase: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to move template task'];
+    }
+}
+
+/**
+ * Move template task to different phase
+ */
+function moveTemplateTaskToPhase($taskId, $newPhaseId) {
+    try {
+        // Get current task info
+        $task = executeQuerySingle("SELECT template_id, phase_id FROM template_tasks WHERE id = ?", [$taskId]);
+        
+        if (!$task) {
+            return ['success' => false, 'message' => 'Template task not found'];
+        }
+        
+        $templateId = $task['template_id'];
+        $oldPhaseId = $task['phase_id'];
+        
+        // Validate new phase belongs to same template
+        if ($newPhaseId) {
+            $phase = executeQuerySingle("SELECT id FROM template_phases WHERE id = ? AND template_id = ?", [$newPhaseId, $templateId]);
+            if (!$phase) {
+                return ['success' => false, 'message' => 'Invalid phase for this template'];
+            }
+        }
+        
+        // Get next order index for target phase
+        $phaseCondition = $newPhaseId ? "phase_id = ?" : "phase_id IS NULL";
+        $params = $newPhaseId ? [$templateId, $newPhaseId] : [$templateId];
+        
+        $result = executeQuerySingle("SELECT COALESCE(MAX(order_index), 0) + 1 as next_order FROM template_tasks WHERE template_id = ? AND $phaseCondition", $params);
+        $nextOrder = $result['next_order'];
+        
+        // Move task to new phase
+        $newPhaseValue = $newPhaseId ? $newPhaseId : null;
+        executeUpdate("UPDATE template_tasks SET phase_id = ?, order_index = ? WHERE id = ?", [$newPhaseValue, $nextOrder, $taskId]);
+        
+        // Reorder remaining tasks in old phase
+        if ($oldPhaseId) {
+            $oldPhaseCondition = "phase_id = ?";
+            $oldParams = [$templateId, $oldPhaseId];
+        } else {
+            $oldPhaseCondition = "phase_id IS NULL";
+            $oldParams = [$templateId];
+        }
+        
+        $remainingTasks = executeQuery("SELECT id FROM template_tasks WHERE template_id = ? AND $oldPhaseCondition ORDER BY order_index", $oldParams);
+        
+        foreach ($remainingTasks as $index => $task) {
+            executeUpdate("UPDATE template_tasks SET order_index = ? WHERE id = ?", [$index + 1, $task['id']]);
+        }
+        
+        return ['success' => true, 'message' => 'Template task moved to new phase successfully'];
+        
+    } catch (Exception $e) {
+        error_log("Error moving template task to phase: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to move template task to new phase'];
+    }
+}
+
+/**
+ * Reorder template tasks
+ */
+function reorderTemplateTasks($taskIds, $phaseId, $templateId) {
+    try {
+        // Validate that all tasks belong to the template and phase
+        $placeholders = str_repeat('?,', count($taskIds) - 1) . '?';
+        $validateQuery = "SELECT COUNT(*) as count FROM template_tasks 
+                         WHERE id IN ($placeholders) 
+                         AND template_id = ? 
+                         AND (phase_id = ? OR (phase_id IS NULL AND ? IS NULL))";
+        $params = array_merge($taskIds, [$templateId, $phaseId, $phaseId]);
+        $validation = executeQuerySingle($validateQuery, $params);
+        
+        if ($validation['count'] != count($taskIds)) {
+            return [
+                'success' => false,
+                'message' => 'Invalid template task IDs provided'
+            ];
+        }
+        
+        // Update order_index for each task
+        foreach ($taskIds as $index => $taskId) {
+            executeUpdate("UPDATE template_tasks SET order_index = ? WHERE id = ?", [$index + 1, $taskId]);
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'Template tasks reordered successfully'
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Error reordering template tasks: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Failed to reorder template tasks'
+        ];
+    }
+}
+
+/**
+ * Get template phases for a specific template
+ */
+function getTemplatePhases($templateId) {
+    try {
+        $sql = "SELECT * FROM template_phases
+                WHERE template_id = ?
+                ORDER BY order_index, id";
+        return executeQuery($sql, [$templateId]) ?: [];
+    } catch (Exception $e) {
+        error_log("Error getting template phases: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Database Backup and Restore Functions
+ */
+
+/**
+ * Create a complete database backup
+ * @return array Result with success status and file path or error message
+ */
+function createDatabaseBackup() {
+    try {
+        $database = getDatabase();
+        if ($database === null) {
+            return ['success' => false, 'message' => 'Database connection failed'];
+        }
+
+        $conn = $database->conn;
+        $dbName = 'web_app_tracker';
+
+        // Create backups directory if it doesn't exist
+        $backupDir = ROOT_PATH . '/backups';
+        if (!file_exists($backupDir)) {
+            mkdir($backupDir, 0755, true);
+        }
+
+        // Generate filename with timestamp
+        $timestamp = date('Y-m-d_H-i-s');
+        $filename = "code_bunker_backup_{$timestamp}.sql";
+        $filepath = $backupDir . '/' . $filename;
+
+        // Start building SQL content
+        $sqlContent = "-- Code Bunker Database Backup\n";
+        $sqlContent .= "-- Generated: " . date('Y-m-d H:i:s') . "\n";
+        $sqlContent .= "-- Database: {$dbName}\n";
+        $sqlContent .= "-- Application Version: " . APP_VERSION . "\n";
+        $sqlContent .= "-- \n\n";
+
+        $sqlContent .= "SET FOREIGN_KEY_CHECKS=0;\n";
+        $sqlContent .= "SET SQL_MODE=\"NO_AUTO_VALUE_ON_ZERO\";\n";
+        $sqlContent .= "SET time_zone = \"+00:00\";\n\n";
+
+        // Get all tables
+        $tables = [];
+        $result = $conn->query("SHOW TABLES");
+        while ($row = $result->fetch(PDO::FETCH_NUM)) {
+            $tables[] = $row[0];
+        }
+
+        // Backup each table
+        foreach ($tables as $table) {
+            // Get table structure
+            $sqlContent .= "-- \n";
+            $sqlContent .= "-- Table structure for table `{$table}`\n";
+            $sqlContent .= "-- \n\n";
+            $sqlContent .= "DROP TABLE IF EXISTS `{$table}`;\n";
+
+            $result = $conn->query("SHOW CREATE TABLE `{$table}`");
+            $row = $result->fetch(PDO::FETCH_NUM);
+            $sqlContent .= $row[1] . ";\n\n";
+
+            // Get table data
+            $result = $conn->query("SELECT * FROM `{$table}`");
+            $numRows = $result->rowCount();
+
+            if ($numRows > 0) {
+                $sqlContent .= "-- \n";
+                $sqlContent .= "-- Dumping data for table `{$table}`\n";
+                $sqlContent .= "-- \n\n";
+
+                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                    $columns = array_keys($row);
+                    $values = array_values($row);
+
+                    // Escape values
+                    $escapedValues = array_map(function($value) use ($conn) {
+                        if ($value === null) {
+                            return 'NULL';
+                        }
+                        return $conn->quote($value);
+                    }, $values);
+
+                    $sqlContent .= "INSERT INTO `{$table}` (`" . implode('`, `', $columns) . "`) VALUES (" . implode(', ', $escapedValues) . ");\n";
+                }
+
+                $sqlContent .= "\n";
+            }
+        }
+
+        $sqlContent .= "SET FOREIGN_KEY_CHECKS=1;\n";
+
+        // Write to file
+        if (file_put_contents($filepath, $sqlContent) === false) {
+            return ['success' => false, 'message' => 'Failed to write backup file'];
+        }
+
+        // Get file size for logging
+        $filesize = filesize($filepath);
+        $filesizeMB = round($filesize / 1024 / 1024, 2);
+
+        return [
+            'success' => true,
+            'message' => "Database backup created successfully ({$filesizeMB} MB)",
+            'filename' => $filename,
+            'filepath' => $filepath,
+            'filesize' => $filesize,
+            'tables_count' => count($tables)
+        ];
+
+    } catch (Exception $e) {
+        error_log("Database backup error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Backup failed: ' . $e->getMessage()];
+    }
+}
+
+/**
+ * Restore database from backup file
+ * @param string $filepath Path to the backup SQL file
+ * @param bool $createBackupFirst Whether to create a backup before restoring
+ * @return array Result with success status and message
+ */
+function restoreDatabaseBackup($filepath, $createBackupFirst = true) {
+    try {
+        if (!file_exists($filepath)) {
+            return ['success' => false, 'message' => 'Backup file not found'];
+        }
+
+        // Validate file extension
+        if (pathinfo($filepath, PATHINFO_EXTENSION) !== 'sql') {
+            return ['success' => false, 'message' => 'Invalid file type. Only .sql files are allowed'];
+        }
+
+        // Create backup before restore if requested
+        if ($createBackupFirst) {
+            $preRestoreBackup = createDatabaseBackup();
+            if (!$preRestoreBackup['success']) {
+                return ['success' => false, 'message' => 'Failed to create pre-restore backup'];
+            }
+        }
+
+        $database = getDatabase();
+        if ($database === null) {
+            return ['success' => false, 'message' => 'Database connection failed'];
+        }
+
+        $conn = $database->conn;
+
+        // Read SQL file
+        $sqlContent = file_get_contents($filepath);
+        if ($sqlContent === false) {
+            return ['success' => false, 'message' => 'Failed to read backup file'];
+        }
+
+        // Basic validation
+        if (empty(trim($sqlContent))) {
+            return ['success' => false, 'message' => 'Backup file is empty'];
+        }
+
+        // Disable foreign key checks and set SQL mode
+        // Note: We don't use transactions for DDL statements (CREATE TABLE, DROP TABLE)
+        // as they cause implicit commits in MySQL
+        $conn->exec("SET FOREIGN_KEY_CHECKS=0");
+        $conn->exec("SET SQL_MODE='NO_AUTO_VALUE_ON_ZERO'");
+
+        try {
+            // Parse SQL statements properly, respecting quoted strings
+            $statements = [];
+            $currentStatement = '';
+            $inQuote = false;
+            $quoteChar = '';
+            $escaped = false;
+            $inComment = false;
+
+            $length = strlen($sqlContent);
+
+            for ($i = 0; $i < $length; $i++) {
+                $char = $sqlContent[$i];
+                $nextChar = ($i + 1 < $length) ? $sqlContent[$i + 1] : '';
+
+                // Handle line comments
+                if (!$inQuote && $char === '-' && $nextChar === '-') {
+                    $inComment = true;
+                    $i++; // Skip next dash
+                    continue;
+                }
+
+                // End of line comment
+                if ($inComment && ($char === "\n" || $char === "\r")) {
+                    $inComment = false;
+                    continue;
+                }
+
+                // Skip if in comment
+                if ($inComment) {
+                    continue;
+                }
+
+                // Handle escape sequences
+                if ($escaped) {
+                    $currentStatement .= $char;
+                    $escaped = false;
+                    continue;
+                }
+
+                // Check for escape character
+                if ($char === '\\') {
+                    $currentStatement .= $char;
+                    $escaped = true;
+                    continue;
+                }
+
+                // Handle quote characters
+                if (($char === "'" || $char === '"' || $char === '`') && !$escaped) {
+                    if (!$inQuote) {
+                        // Starting a quoted string
+                        $inQuote = true;
+                        $quoteChar = $char;
+                    } elseif ($char === $quoteChar) {
+                        // Check for doubled quote (escape in SQL)
+                        if ($nextChar === $quoteChar) {
+                            $currentStatement .= $char . $nextChar;
+                            $i++; // Skip next quote
+                            continue;
+                        }
+                        // Ending the quoted string
+                        $inQuote = false;
+                        $quoteChar = '';
+                    }
+                }
+
+                // Handle statement terminator
+                if ($char === ';' && !$inQuote) {
+                    $currentStatement = trim($currentStatement);
+                    if (!empty($currentStatement)) {
+                        $statements[] = $currentStatement;
+                    }
+                    $currentStatement = '';
+                    continue;
+                }
+
+                // Add character to current statement
+                $currentStatement .= $char;
+            }
+
+            // Add last statement if exists
+            $currentStatement = trim($currentStatement);
+            if (!empty($currentStatement)) {
+                $statements[] = $currentStatement;
+            }
+
+            // Execute each statement
+            $executedCount = 0;
+            $errorCount = 0;
+
+            foreach ($statements as $statement) {
+                try {
+                    $conn->exec($statement);
+                    $executedCount++;
+                } catch (PDOException $e) {
+                    $errorCount++;
+                    // Log the error but continue with other statements
+                    error_log("SQL execution warning: " . $e->getMessage());
+
+                    // Only throw for critical errors (not "table already exists" type errors)
+                    $errorMsg = $e->getMessage();
+                    if (strpos($errorMsg, 'already exists') === false &&
+                        strpos($errorMsg, 'Duplicate entry') === false &&
+                        strpos($errorMsg, "doesn't exist") === false) {
+                        // Re-enable foreign key checks before throwing
+                        $conn->exec("SET FOREIGN_KEY_CHECKS=1");
+                        throw $e;
+                    }
+                }
+            }
+
+            // Re-enable foreign key checks
+            $conn->exec("SET FOREIGN_KEY_CHECKS=1");
+
+            $message = "Database restored successfully. Executed {$executedCount} SQL statements.";
+            if ($errorCount > 0) {
+                $message .= " ({$errorCount} warnings logged)";
+            }
+            if ($createBackupFirst && isset($preRestoreBackup['filename'])) {
+                $message .= " Pre-restore backup saved as: {$preRestoreBackup['filename']}";
+            }
+
+            return [
+                'success' => true,
+                'message' => $message,
+                'statements_executed' => $executedCount,
+                'pre_restore_backup' => $createBackupFirst ? $preRestoreBackup['filename'] : null
+            ];
+
+        } catch (Exception $e) {
+            // Re-enable foreign key checks on error
+            $conn->exec("SET FOREIGN_KEY_CHECKS=1");
+            throw $e;
+        }
+
+    } catch (Exception $e) {
+        error_log("Database restore error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Restore failed: ' . $e->getMessage()];
+    }
+}
+
+/**
+ * Get list of available backup files
+ * @return array List of backup files with metadata
+ */
+function getBackupFiles() {
+    try {
+        $backupDir = ROOT_PATH . '/backups';
+
+        if (!file_exists($backupDir)) {
+            return [];
+        }
+
+        $files = glob($backupDir . '/*.sql');
+        $backups = [];
+
+        foreach ($files as $file) {
+            $backups[] = [
+                'filename' => basename($file),
+                'filepath' => $file,
+                'size' => filesize($file),
+                'size_mb' => round(filesize($file) / 1024 / 1024, 2),
+                'created' => filemtime($file),
+                'created_formatted' => date('Y-m-d H:i:s', filemtime($file))
+            ];
+        }
+
+        // Sort by creation time, newest first
+        usort($backups, function($a, $b) {
+            return $b['created'] - $a['created'];
+        });
+
+        return $backups;
+
+    } catch (Exception $e) {
+        error_log("Error getting backup files: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Delete a backup file
+ * @param string $filename Backup filename to delete
+ * @return array Result with success status and message
+ */
+function deleteBackupFile($filename) {
+    try {
+        // Validate filename (security check)
+        if (!preg_match('/^code_bunker_backup_[\d\-_]+\.sql$/', $filename)) {
+            return ['success' => false, 'message' => 'Invalid backup filename'];
+        }
+
+        $backupDir = ROOT_PATH . '/backups';
+        $filepath = $backupDir . '/' . $filename;
+
+        if (!file_exists($filepath)) {
+            return ['success' => false, 'message' => 'Backup file not found'];
+        }
+
+        if (unlink($filepath)) {
+            return ['success' => true, 'message' => 'Backup file deleted successfully'];
+        } else {
+            return ['success' => false, 'message' => 'Failed to delete backup file'];
+        }
+
+    } catch (Exception $e) {
+        error_log("Error deleting backup file: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Delete failed: ' . $e->getMessage()];
+    }
+}
+
+/**
+ * Download a backup file
+ * @param string $filename Backup filename to download
+ */
+function downloadBackupFile($filename) {
+    try {
+        // Validate filename (security check)
+        if (!preg_match('/^code_bunker_backup_[\d\-_]+\.sql$/', $filename)) {
+            return false;
+        }
+
+        $backupDir = ROOT_PATH . '/backups';
+        $filepath = $backupDir . '/' . $filename;
+
+        if (!file_exists($filepath)) {
+            return false;
+        }
+
+        // Set headers for download
+        header('Content-Type: application/sql');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($filepath));
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: 0');
+
+        // Output file
+        readfile($filepath);
+        exit;
+
+    } catch (Exception $e) {
+        error_log("Error downloading backup file: " . $e->getMessage());
+        return false;
     }
 }
 
