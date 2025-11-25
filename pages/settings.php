@@ -21,25 +21,109 @@ $currentUser = getCurrentUser();
 $successMessage = '';
 $errorMessage = '';
 
+// Handle backup creation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_backup'])) {
+    $result = createDatabaseBackup();
+    if ($result['success']) {
+        $successMessage = $result['message'] . " Backup saved as: " . $result['filename'];
+        logActivity($currentUser['id'], 'backup_created', 'database', 0, null, ['filename' => $result['filename'], 'size' => $result['filesize']], 'Database backup created');
+    } else {
+        $errorMessage = $result['message'];
+    }
+}
+
+// Handle backup download
+if (isset($_GET['download_backup'])) {
+    $filename = $_GET['download_backup'];
+    downloadBackupFile($filename);
+}
+
+// Handle backup deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_backup'])) {
+    $filename = $_POST['backup_filename'];
+    $result = deleteBackupFile($filename);
+    if ($result['success']) {
+        $successMessage = $result['message'];
+        logActivity($currentUser['id'], 'backup_deleted', 'database', 0, null, ['filename' => $filename], 'Database backup deleted');
+    } else {
+        $errorMessage = $result['message'];
+    }
+}
+
+// Handle backup restore
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restore_backup'])) {
+    $filename = $_POST['restore_filename'];
+    $backupDir = ROOT_PATH . '/backups';
+    $filepath = $backupDir . '/' . $filename;
+
+    $result = restoreDatabaseBackup($filepath, true);
+    if ($result['success']) {
+        $successMessage = $result['message'];
+        logActivity($currentUser['id'], 'backup_restored', 'database', 0, null, ['filename' => $filename], 'Database backup restored');
+    } else {
+        $errorMessage = $result['message'];
+    }
+}
+
+// Handle file upload for restore
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_restore'])) {
+    if (isset($_FILES['backup_file']) && $_FILES['backup_file']['error'] === UPLOAD_ERR_OK) {
+        $uploadedFile = $_FILES['backup_file'];
+
+        // Validate file
+        if (pathinfo($uploadedFile['name'], PATHINFO_EXTENSION) !== 'sql') {
+            $errorMessage = 'Invalid file type. Only .sql files are allowed.';
+        } else {
+            // Create backups directory if it doesn't exist
+            $backupDir = ROOT_PATH . '/backups';
+            if (!file_exists($backupDir)) {
+                mkdir($backupDir, 0755, true);
+            }
+
+            // Generate safe filename
+            $timestamp = date('Y-m-d_H-i-s');
+            $safeFilename = "code_bunker_backup_uploaded_{$timestamp}.sql";
+            $destination = $backupDir . '/' . $safeFilename;
+
+            if (move_uploaded_file($uploadedFile['tmp_name'], $destination)) {
+                // Restore the uploaded backup
+                $result = restoreDatabaseBackup($destination, true);
+                if ($result['success']) {
+                    $successMessage = $result['message'];
+                    logActivity($currentUser['id'], 'backup_uploaded_restored', 'database', 0, null, ['filename' => $safeFilename], 'Database backup uploaded and restored');
+                } else {
+                    $errorMessage = $result['message'];
+                    // Delete the uploaded file if restore failed
+                    unlink($destination);
+                }
+            } else {
+                $errorMessage = 'Failed to upload backup file.';
+            }
+        }
+    } else {
+        $errorMessage = 'No file uploaded or upload error occurred.';
+    }
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_settings'])) {
     $updated = 0;
     $errors = 0;
-    
+
     foreach ($_POST as $key => $value) {
         if (strpos($key, 'setting_') === 0) {
             $settingKey = substr($key, 8); // Remove 'setting_' prefix
-            
+
             // Handle checkboxes (they're not sent if unchecked)
-            if ($settingKey === 'enable_budget_tracking' || 
-                $settingKey === 'enable_time_tracking' || 
-                $settingKey === 'enable_notifications' || 
+            if ($settingKey === 'enable_budget_tracking' ||
+                $settingKey === 'enable_time_tracking' ||
+                $settingKey === 'enable_notifications' ||
                 $settingKey === 'enable_calendar_view' ||
                 $settingKey === 'enable_file_uploads' ||
                 $settingKey === 'auto_assign_creator') {
                 $value = isset($_POST[$key]) ? true : false;
             }
-            
+
             if (updateSetting($settingKey, $value, $currentUser['id'])) {
                 $updated++;
             } else {
@@ -47,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_settings'])) {
             }
         }
     }
-    
+
     if ($updated > 0) {
         $successMessage = "Successfully updated $updated setting(s).";
         if ($errors > 0) {
@@ -85,6 +169,9 @@ if (!$budgetTrackingExists) {
         'category' => 'features'
     ];
 }
+
+// Get list of available backups
+$backupFiles = getBackupFiles();
 ?>
 
 <div class="row mb-4">
@@ -281,14 +368,148 @@ if (!$budgetTrackingExists) {
     </div>
 </form>
 
+<!-- Database Backup & Restore -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-database"></i> Database Backup & Restore
+                </h5>
+                <p class="text-white-50 mb-0 mt-1">Backup and restore your entire database</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Create Backup Section -->
+                    <div class="col-lg-6 mb-3">
+                        <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-download"></i> Create Backup</h6>
+                        <p class="text-muted small">
+                            Create a complete backup of all projects, tasks, notes, users, and settings.
+                        </p>
+                        <form method="POST" action="">
+                            <button type="submit" name="create_backup" class="btn btn-success w-100">
+                                <i class="bi bi-download"></i> Create New Backup
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Upload & Restore Section -->
+                    <div class="col-lg-6 mb-3">
+                        <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-upload"></i> Upload & Restore</h6>
+                        <p class="text-muted small">
+                            Upload a backup file (.sql) to restore your database.
+                        </p>
+                        <form method="POST" action="" enctype="multipart/form-data">
+                            <div class="input-group">
+                                <input type="file" name="backup_file" class="form-control" accept=".sql" required>
+                                <button type="submit" name="upload_restore" class="btn btn-warning">
+                                    <i class="bi bi-upload"></i> Upload & Restore
+                                </button>
+                            </div>
+                            <div class="form-text text-danger mt-2">
+                                <i class="bi bi-exclamation-triangle"></i> Warning: This will replace all current data. A backup will be created first.
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Available Backups -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-file-earmark-zip"></i> Available Backups (<?php echo count($backupFiles); ?>)</h6>
+
+                        <?php if (empty($backupFiles)): ?>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> No backups available. Create your first backup above.
+                            </div>
+                        <?php else: ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Filename</th>
+                                            <th>Created</th>
+                                            <th>Size</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($backupFiles as $backup): ?>
+                                        <tr>
+                                            <td>
+                                                <i class="bi bi-file-earmark-code"></i>
+                                                <small class="font-monospace"><?php echo htmlspecialchars($backup['filename']); ?></small>
+                                            </td>
+                                            <td>
+                                                <small><?php echo $backup['created_formatted']; ?></small>
+                                            </td>
+                                            <td>
+                                                <small><?php echo $backup['size_mb']; ?> MB</small>
+                                            </td>
+                                            <td class="text-end">
+                                                <a href="?download_backup=<?php echo urlencode($backup['filename']); ?>"
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   title="Download backup">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-warning"
+                                                        title="Restore this backup"
+                                                        onclick="confirmRestore('<?php echo htmlspecialchars($backup['filename']); ?>')">
+                                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                                </button>
+
+                                                <form method="POST" action="" style="display: inline;">
+                                                    <input type="hidden" name="backup_filename" value="<?php echo htmlspecialchars($backup['filename']); ?>">
+                                                    <button type="submit"
+                                                            name="delete_backup"
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            title="Delete backup"
+                                                            onclick="return confirm('Are you sure you want to delete this backup?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Warning Alert -->
+                <div class="alert alert-warning mt-3">
+                    <h6><i class="bi bi-exclamation-triangle"></i> Important Notes</h6>
+                    <ul class="mb-0">
+                        <li>Backups include all data: projects, tasks, notes, users, and settings.</li>
+                        <li>Restoring a backup will replace ALL current database data.</li>
+                        <li>A pre-restore backup is automatically created before restoring.</li>
+                        <li>Keep regular backups in a secure location outside your server.</li>
+                        <li>Test your backups periodically to ensure they can be restored.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form for restore confirmation -->
+<form id="restoreForm" method="POST" action="" style="display: none;">
+    <input type="hidden" name="restore_filename" id="restoreFilename">
+    <input type="hidden" name="restore_backup">
+</form>
+
 <!-- Budget Tracking Info -->
 <div class="row mt-4">
     <div class="col-12">
         <div class="alert alert-info">
             <h6><i class="bi bi-info-circle"></i> About Budget Tracking</h6>
             <p class="mb-0">
-                Budget tracking is currently <strong><?php echo isFeatureEnabled('budget_tracking') ? 'enabled' : 'disabled'; ?></strong>. 
-                When disabled, budget-related fields are hidden throughout the application, making it more suitable for 
+                Budget tracking is currently <strong><?php echo isFeatureEnabled('budget_tracking') ? 'enabled' : 'disabled'; ?></strong>.
+                When disabled, budget-related fields are hidden throughout the application, making it more suitable for
                 time-focused project management. You can toggle this feature at any time.
             </p>
         </div>
@@ -313,6 +534,19 @@ if (!$budgetTrackingExists) {
 .alert-info {
     border-left: 4px solid #0dcaf0;
 }
+
+.font-monospace {
+    font-family: 'Courier New', monospace;
+}
 </style>
+
+<script>
+function confirmRestore(filename) {
+    if (confirm('WARNING: Restoring this backup will replace ALL current database data.\n\nA backup of the current database will be created automatically before restoring.\n\nFilename: ' + filename + '\n\nAre you sure you want to continue?')) {
+        document.getElementById('restoreFilename').value = filename;
+        document.getElementById('restoreForm').submit();
+    }
+}
+</script>
 
 <?php require_once dirname(__FILE__) . '/../includes/footer.php'; ?>
