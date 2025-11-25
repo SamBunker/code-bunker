@@ -1240,13 +1240,13 @@ function generateReportSummary($filters = []) {
 function getSetting($key, $default = null) {
     $query = "SELECT setting_value, setting_type FROM settings WHERE setting_key = ?";
     $result = executeQuerySingle($query, [$key]);
-    
+
     if (!$result) {
         return $default;
     }
-    
+
     $value = $result['setting_value'];
-    
+
     // Convert based on type
     switch ($result['setting_type']) {
         case 'boolean':
@@ -1259,6 +1259,23 @@ function getSetting($key, $default = null) {
         default:
             return $value;
     }
+}
+
+/**
+ * Get raw setting value without type conversion
+ * @param string $key Setting key
+ * @param mixed $default Default value if setting not found
+ * @return string|null Raw setting value
+ */
+function getSettingRaw($key, $default = null) {
+    $query = "SELECT setting_value FROM settings WHERE setting_key = ?";
+    $result = executeQuerySingle($query, [$key]);
+
+    if (!$result) {
+        return $default;
+    }
+
+    return $result['setting_value'];
 }
 
 /**
@@ -1379,12 +1396,50 @@ function getProjectCategories() {
 function getTaskTypes() {
     $query = "SELECT setting_value FROM settings WHERE setting_key = 'task_types'";
     $result = executeQuerySingle($query);
-    
+
     if ($result) {
         return json_decode($result['setting_value'], true) ?: [];
     }
-    
+
     return ['Security Update', 'Version Upgrade', 'Bug Fix', 'Feature Enhancement', 'Performance Optimization'];
+}
+
+/**
+ * Get project statuses from settings with fallback to constants
+ * @return array Project statuses (key => label)
+ */
+function getProjectStatuses() {
+    $query = "SELECT setting_value FROM settings WHERE setting_key = 'project_statuses'";
+    $result = executeQuerySingle($query);
+
+    if ($result && !empty($result['setting_value'])) {
+        $decoded = json_decode($result['setting_value'], true);
+        if ($decoded && is_array($decoded)) {
+            return $decoded;
+        }
+    }
+
+    // Fallback to constants if no setting exists
+    return PROJECT_STATUS;
+}
+
+/**
+ * Get task statuses from settings with fallback to constants
+ * @return array Task statuses (key => label)
+ */
+function getTaskStatuses() {
+    $query = "SELECT setting_value FROM settings WHERE setting_key = 'task_statuses'";
+    $result = executeQuerySingle($query);
+
+    if ($result && !empty($result['setting_value'])) {
+        $decoded = json_decode($result['setting_value'], true);
+        if ($decoded && is_array($decoded)) {
+            return $decoded;
+        }
+    }
+
+    // Fallback to constants if no setting exists
+    return TASK_STATUS;
 }
 
 /**

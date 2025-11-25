@@ -420,3 +420,1172 @@ Stack trace:
 [09-Aug-2025 09:03:30 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
 [09-Aug-2025 09:03:30 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
 [09-Aug-2025 09:03:38 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 18:08:26 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 18:08:52 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 18:08:52 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 18:15:56 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 18:15:56 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 18:16:03 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 18:16:11 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 18:16:11 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't.order_index' in 'order clause'
+[09-Aug-2025 19:06:51 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function executeQueryMultiple() in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php:2171
+Stack trace:
+#0 C:\xampp\htdocs\juniata\code-bunker\pages\template_view.php(43): getTemplateTasksByPhase(1)
+#1 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\includes\functions.php on line 2171
+[10-Aug-2025 09:05:26 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:05:26 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:05:26 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:05:41 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:05:41 America/New_York] Query Parameters: startDate=2025-09-01, endDate=2025-09-30
+[10-Aug-2025 09:05:41 America/New_York] Calendar Events Retrieved: 4
+[10-Aug-2025 09:05:41 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:05:41 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:05:41 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:06:01 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:06:01 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:06:01 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:06:03 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:06:03 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:06:03 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:06:05 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:06:05 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:06:05 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:06:08 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:06:08 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:06:08 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:09:01 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:09:01 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:09:01 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:10:01 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:10:01 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:10:01 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:11:29 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:11:29 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:11:29 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:11:31 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:11:31 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:11:31 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:18:31 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:18:31 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:18:31 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:18:33 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:18:33 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:18:33 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:18:37 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:18:37 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:18:37 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:21:00 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:21:00 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:21:00 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:21:05 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:21:05 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:21:05 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:21:18 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:21:18 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:21:18 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:21:26 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:21:26 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:21:26 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:28:58 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:28:58 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:28:58 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 09:30:09 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 09:30:09 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 09:30:09 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:00:50 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:00:50 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:00:50 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:01:33 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:01:33 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:01:33 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:06:39 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:06:39 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:06:39 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:06:42 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:06:42 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:06:42 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:06:42 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:06:42 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:06:42 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:06:43 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:06:43 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:06:43 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:06:49 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:06:49 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:06:49 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:06:51 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:06:51 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:06:51 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:06:52 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:06:52 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:06:52 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:07:03 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:07:03 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:07:03 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:09:52 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:09:52 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:09:52 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:09:57 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:09:57 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:09:57 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:10:31 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:10:31 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:10:31 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:11:39 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.priority,
+        p.status,
+        p.category as description
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.priority,
+        t.status,
+        p.name as description
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:11:39 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:11:39 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 11:15:22 America/New_York] Calendar Query: 
+    SELECT 
+        'project' as type,
+        p.id,
+        p.name as title,
+        p.due_date as date,
+        p.start_date,
+        p.priority,
+        p.status,
+        p.category as description,
+        'due_date' as date_type
+    FROM projects p 
+    WHERE p.due_date BETWEEN ? AND ?
+    
+    UNION ALL
+    
+    SELECT 
+        'task' as type,
+        t.id,
+        t.title,
+        t.due_date as date,
+        t.start_date,
+        t.priority,
+        t.status,
+        p.name as description,
+        'due_date' as date_type
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.due_date BETWEEN ? AND ?
+    
+    ORDER BY date ASC
+
+[10-Aug-2025 11:15:22 America/New_York] Query Parameters: startDate=2025-08-01, endDate=2025-08-31
+[10-Aug-2025 11:15:22 America/New_York] Calendar Events Retrieved: 8
+[10-Aug-2025 12:19:54 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\pages\reports.php on line 65
+[10-Aug-2025 12:19:54 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\pages\reports.php on line 66
+[10-Aug-2025 12:21:20 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.work_breakdown_structure' doesn't exist
+[10-Aug-2025 12:21:30 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 12:29:27 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 12:29:44 America/New_York] Query Execution Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '' at line 13
+[10-Aug-2025 12:29:44 America/New_York] Query Execution Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '' at line 12
+[10-Aug-2025 12:29:44 America/New_York] PHP Warning:  Trying to access array offset on value of type bool in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 639
+[10-Aug-2025 12:29:44 America/New_York] PHP Warning:  Trying to access array offset on value of type bool in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 643
+[10-Aug-2025 12:29:44 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'health_status' in 'field list'
+[10-Aug-2025 12:29:44 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'estimated_cost' in 'field list'
+[10-Aug-2025 12:29:44 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.progress_percentage' in 'field list'
+[10-Aug-2025 12:29:44 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'risk_level' in 'field list'
+[10-Aug-2025 12:29:44 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'estimated_cost' in 'field list'
+[10-Aug-2025 12:29:44 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'progress_percentage' in 'field list'
+[10-Aug-2025 12:29:44 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 12:29:54 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 12:30:00 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 12:30:09 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined method ReportBuilder::renderWBSHTML() in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php:42
+Stack trace:
+#0 C:\xampp\htdocs\juniata\code-bunker\pages\advanced_reports.php(42): ReportBuilder->generateWBSReport('1', 'html')
+#1 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 42
+[10-Aug-2025 17:38:26 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 17:38:33 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 17:38:40 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined method ReportBuilder::exportWBSToPDF() in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php:36
+Stack trace:
+#0 C:\xampp\htdocs\juniata\code-bunker\pages\advanced_reports.php(42): ReportBuilder->generateWBSReport('1', 'pdf')
+#1 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 36
+[10-Aug-2025 17:39:30 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 17:39:36 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 17:39:43 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 17:40:05 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'health_status' in 'field list'
+[10-Aug-2025 17:40:05 America/New_York] Query Execution Error: SQLSTATE[23000]: Integrity constraint violation: 1052 Column 'status' in field list is ambiguous
+[10-Aug-2025 17:40:05 America/New_York] PHP Warning:  Trying to access array offset on value of type bool in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 697
+[10-Aug-2025 17:40:05 America/New_York] PHP Warning:  Trying to access array offset on value of type bool in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 701
+[10-Aug-2025 17:40:05 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'health_status' in 'field list'
+[10-Aug-2025 17:40:05 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'estimated_cost' in 'field list'
+[10-Aug-2025 17:40:05 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.progress_percentage' in 'field list'
+[10-Aug-2025 17:40:05 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'risk_level' in 'field list'
+[10-Aug-2025 17:40:05 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'estimated_cost' in 'field list'
+[10-Aug-2025 17:40:05 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'progress_percentage' in 'field list'
+[10-Aug-2025 17:40:05 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 19:39:18 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 19:39:21 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 19:39:32 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 19:39:36 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'health_status' in 'field list'
+[10-Aug-2025 19:39:36 America/New_York] Query Execution Error: SQLSTATE[23000]: Integrity constraint violation: 1052 Column 'status' in field list is ambiguous
+[10-Aug-2025 19:39:36 America/New_York] PHP Warning:  Trying to access array offset on value of type bool in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 697
+[10-Aug-2025 19:39:36 America/New_York] PHP Warning:  Trying to access array offset on value of type bool in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 701
+[10-Aug-2025 19:39:36 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'health_status' in 'field list'
+[10-Aug-2025 19:39:36 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'estimated_cost' in 'field list'
+[10-Aug-2025 19:39:36 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.progress_percentage' in 'field list'
+[10-Aug-2025 19:39:36 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'risk_level' in 'field list'
+[10-Aug-2025 19:39:36 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'estimated_cost' in 'field list'
+[10-Aug-2025 19:39:36 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'progress_percentage' in 'field list'
+[10-Aug-2025 19:39:36 America/New_York] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'web_app_tracker.report_templates' doesn't exist
+[10-Aug-2025 19:57:20 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined method Database::prepare() in C:\xampp\htdocs\juniata\code-bunker\populate_demo_data.php:48
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\populate_demo_data.php on line 48
+[10-Aug-2025 19:58:49 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'health_status' in 'field list'
+[21-Aug-2025 13:49:47 America/New_York] Query Execution Error: SQLSTATE[HY000]: General error: 2006 MySQL server has gone away
+[21-Aug-2025 13:49:57 America/New_York] Database Connection Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[21-Aug-2025 13:49:57 America/New_York] Failed to establish database connection
+[21-Aug-2025 13:49:57 America/New_York] Database connection is null - cannot execute query
+[21-Aug-2025 14:15:21 America/New_York] DELETE PHASE: Attempting to delete phase ID: 2
+[21-Aug-2025 14:15:21 America/New_York] DELETE PHASE: Result - SUCCESS: Phase deleted successfully
+[24-Nov-2025 19:20:09 America/New_York] Database restore error: SQLSTATE[42S01]: Base table or view already exists: 1050 Table 'activity_log' already exists
+[24-Nov-2025 19:28:09 America/New_York] SQL execution warning: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''Mozilla/5.0 (Windows NT 10.0' at line 1
+[24-Nov-2025 19:28:09 America/New_York] Database restore error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''Mozilla/5.0 (Windows NT 10.0' at line 1
+[24-Nov-2025 19:28:24 America/New_York] SQL execution warning: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''Mozilla/5.0 (Windows NT 10.0' at line 1
+[24-Nov-2025 19:28:24 America/New_York] Database restore error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''Mozilla/5.0 (Windows NT 10.0' at line 1
+[24-Nov-2025 20:16:16 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 251
+[24-Nov-2025 20:16:16 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 252
+[24-Nov-2025 20:16:38 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 251
+[24-Nov-2025 20:16:38 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 252
+[24-Nov-2025 20:16:46 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 490
+[24-Nov-2025 20:16:46 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 491
+[24-Nov-2025 20:16:48 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 251
+[24-Nov-2025 20:16:48 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 252
+[24-Nov-2025 20:17:29 America/New_York] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.status' in 'where clause'
+[24-Nov-2025 20:17:53 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 251
+[24-Nov-2025 20:17:53 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 252
+[24-Nov-2025 20:20:06 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 251
+[24-Nov-2025 20:20:06 America/New_York] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\juniata\code-bunker\includes\header.php:78) in C:\xampp\htdocs\juniata\code-bunker\includes\ReportBuilder.php on line 252
+[24-Nov-2025 20:31:21 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\code-bunker\pages\projects.php on line 200
+[24-Nov-2025 20:31:21 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\code-bunker\pages\projects.php on line 449
+[24-Nov-2025 20:31:29 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\code-bunker\pages\tasks.php on line 469
+[24-Nov-2025 20:39:42 America/New_York] PHP Fatal error:  Uncaught TypeError: htmlspecialchars(): Argument #1 ($string) must be of type string, array given in C:\xampp\htdocs\juniata\code-bunker\pages\settings.php:354
+Stack trace:
+#0 C:\xampp\htdocs\juniata\code-bunker\pages\settings.php(354): htmlspecialchars(Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\pages\settings.php on line 354
+[24-Nov-2025 20:39:46 America/New_York] PHP Fatal error:  Uncaught TypeError: htmlspecialchars(): Argument #1 ($string) must be of type string, array given in C:\xampp\htdocs\juniata\code-bunker\pages\settings.php:354
+Stack trace:
+#0 C:\xampp\htdocs\juniata\code-bunker\pages\settings.php(354): htmlspecialchars(Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\juniata\code-bunker\pages\settings.php on line 354
+[25-Nov-2025 00:43:46 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\code-bunker\pages\settings.php on line 396
+[25-Nov-2025 00:43:46 America/New_York] PHP Warning:  foreach() argument must be of type array|object, string given in C:\xampp\htdocs\juniata\code-bunker\pages\settings.php on line 418
