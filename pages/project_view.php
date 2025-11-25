@@ -356,6 +356,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $tasksByPhase = getProjectTasksByPhase($projectId);
             }
             break;
+            
+        case 'move_task_within_phase':
+            $taskId = intval($_POST['task_id']);
+            $direction = sanitizeInput($_POST['direction']);
+            $result = moveTaskWithinPhase($taskId, $direction);
+            $message = $result['message'];
+            $messageType = $result['success'] ? 'success' : 'error';
+            
+            if ($result['success']) {
+                // Refresh phase and task data
+                $tasksByPhase = getProjectTasksByPhase($projectId);
+                $allTasks = [];
+                foreach ($tasksByPhase as $phase) {
+                    $allTasks = array_merge($allTasks, $phase['tasks']);
+                }
+            }
+            break;
+            
+        case 'move_task_to_phase':
+            $taskId = intval($_POST['task_id']);
+            $newPhaseId = $_POST['new_phase_id'] === '' ? null : intval($_POST['new_phase_id']);
+            $result = moveTaskToPhase($taskId, $newPhaseId);
+            $message = $result['message'];
+            $messageType = $result['success'] ? 'success' : 'error';
+            
+            if ($result['success']) {
+                // Refresh phase and task data
+                $tasksByPhase = getProjectTasksByPhase($projectId);
+                $allTasks = [];
+                foreach ($tasksByPhase as $phase) {
+                    $allTasks = array_merge($allTasks, $phase['tasks']);
+                }
+            }
+            break;
+            
+        case 'reorder_tasks':
+            $taskIds = $_POST['task_ids'] ?? [];
+            $phaseId = $_POST['phase_id'] === '' ? null : intval($_POST['phase_id']);
+            
+            // Validate task_ids is an array of integers
+            $taskIds = array_map('intval', $taskIds);
+            $taskIds = array_filter($taskIds, function($id) { return $id > 0; });
+            
+            if (!empty($taskIds)) {
+                $result = reorderTasks($taskIds, $phaseId, $projectId);
+                $message = $result['message'];
+                $messageType = $result['success'] ? 'success' : 'error';
+                
+                if ($result['success']) {
+                    // Refresh phase and task data
+                    $tasksByPhase = getProjectTasksByPhase($projectId);
+                    $allTasks = [];
+                    foreach ($tasksByPhase as $phase) {
+                        $allTasks = array_merge($allTasks, $phase['tasks']);
+                    }
+                }
+            } else {
+                $message = 'Invalid task data for reordering';
+                $messageType = 'error';
+            }
+            break;
     }
 }
 
@@ -640,7 +701,7 @@ if ($users === false) $users = [];
                                                 <th width="10%">Priority</th>
                                                 <th width="15%">Assigned</th>
                                                 <th width="10%">Due Date</th>
-                                                <th width="10%">Actions</th>
+                                                <th width="15%">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -649,7 +710,12 @@ if ($users === false) $users = [];
                                             foreach ($phase['tasks'] as $task): 
                                             ?>
                                             <tr class="clickable-row" data-href="task_view.php?id=<?= $task['id'] ?>" style="cursor: pointer;">
-                                                <td><code><?= $phaseNumber ?>.<?= $taskNumber ?></code></td>
+                                                <td>
+                                                    <span class="drag-handle me-1" style="cursor: grab; color: #999;" title="Drag to move">
+                                                        <i class="bi bi-grip-vertical" style="font-size: 0.7rem;"></i>
+                                                    </span>
+                                                    <code><?= $phaseNumber ?>.<?= $taskNumber ?></code>
+                                                </td>
                                                 <td>
                                                     <strong><?= htmlspecialchars($task['title']) ?></strong>
                                                     <?php if ($task['description']): ?>
@@ -695,15 +761,77 @@ if ($users === false) $users = [];
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <div class="btn-group" role="group">
-                                                        <a href="task_view.php?id=<?= $task['id'] ?>" class="btn btn-xs btn-outline-primary" onclick="event.stopPropagation();">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
-                                                        <button class="btn btn-xs btn-outline-secondary" 
-                                                                onclick="event.stopPropagation(); editTask(<?= $task['id'] ?>)"
-                                                                data-bs-toggle="modal" data-bs-target="#editTaskModal">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </button>
+                                                    <div class="task-actions-toolbar">
+                                                        <!-- Primary Action Buttons -->
+                                                        <div class="task-actions-primary">
+                                                            <a href="task_view.php?id=<?= $task['id'] ?>" 
+                                                               class="task-action-btn task-action-view" 
+                                                               title="View Task"
+                                                               onclick="event.stopPropagation();">
+                                                                <i class="bi bi-eye"></i>
+                                                            </a>
+                                                            <button class="task-action-btn task-action-edit" 
+                                                                    onclick="event.stopPropagation(); editTask(<?= $task['id'] ?>)"
+                                                                    data-bs-toggle="modal" data-bs-target="#editTaskModal"
+                                                                    title="Edit Task">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                        </div>
+                                                        
+                                                        <!-- Movement Controls -->
+                                                        <div class="task-movement-controls">
+                                                            <!-- Reorder Buttons -->
+                                                            <div class="task-reorder-group">
+                                                                <button class="task-move-btn task-move-up" 
+                                                                        onclick="event.stopPropagation(); moveTask(<?= $task['id'] ?>, 'up')"
+                                                                        title="Move Up">
+                                                                    <i class="bi bi-chevron-up"></i>
+                                                                </button>
+                                                                <button class="task-move-btn task-move-down" 
+                                                                        onclick="event.stopPropagation(); moveTask(<?= $task['id'] ?>, 'down')"
+                                                                        title="Move Down">
+                                                                    <i class="bi bi-chevron-down"></i>
+                                                                </button>
+                                                            </div>
+                                                            
+                                                            <!-- Phase Transfer -->
+                                                            <div class="dropdown task-phase-transfer">
+                                                                <button class="task-action-btn task-action-transfer dropdown-toggle" 
+                                                                        type="button" 
+                                                                        data-bs-toggle="dropdown" 
+                                                                        data-bs-boundary="clippingParents"
+                                                                        data-bs-auto-close="true"
+                                                                        aria-expanded="false"
+                                                                        title="Move to Different Phase">
+                                                                    <i class="bi bi-layers"></i>
+                                                                </button>
+                                                                <div class="dropdown-menu dropdown-menu-end task-phase-menu">
+                                                                    <div class="dropdown-header">
+                                                                        <i class="bi bi-arrow-right-circle me-1"></i>
+                                                                        Move to Phase
+                                                                    </div>
+                                                                    <div class="dropdown-divider"></div>
+                                                                    <button class="dropdown-item task-phase-option <?= $task['phase_id'] === null ? 'current-phase' : '' ?>" 
+                                                                            onclick="moveTaskToPhase(<?= $task['id'] ?>, null)">
+                                                                        <i class="bi bi-inbox me-2"></i>
+                                                                        Unassigned Tasks
+                                                                        <?php if ($task['phase_id'] === null): ?>
+                                                                            <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+                                                                        <?php endif; ?>
+                                                                    </button>
+                                                                    <?php foreach ($projectPhases as $movePhase): ?>
+                                                                    <button class="dropdown-item task-phase-option <?= $task['phase_id'] == $movePhase['id'] ? 'current-phase' : '' ?>" 
+                                                                            onclick="moveTaskToPhase(<?= $task['id'] ?>, <?= $movePhase['id'] ?>)">
+                                                                        <i class="bi bi-folder me-2"></i>
+                                                                        <?= htmlspecialchars($movePhase['name']) ?>
+                                                                        <?php if ($task['phase_id'] == $movePhase['id']): ?>
+                                                                            <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+                                                                        <?php endif; ?>
+                                                                    </button>
+                                                                    <?php endforeach; ?>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1367,8 +1495,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle clickable rows
     document.querySelectorAll('.clickable-row').forEach(row => {
         row.addEventListener('click', function(e) {
-            // Don't trigger if clicking on action buttons or dropdowns
-            if (e.target.closest('.btn-group') || e.target.closest('button') || e.target.closest('a') || e.target.closest('.dropdown')) {
+            // Don't trigger if clicking on action buttons, dropdowns, or dropdown menus
+            if (e.target.closest('.task-actions-toolbar') || 
+                e.target.closest('.btn-group') || 
+                e.target.closest('button') || 
+                e.target.closest('a') || 
+                e.target.closest('.dropdown') ||
+                e.target.closest('.dropdown-menu')) {
                 return;
             }
             
@@ -1379,34 +1512,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Initialize all dropdowns with body container
-    document.querySelectorAll('.dropdown-toggle').forEach(function(toggle) {
-        toggle.addEventListener('show.bs.dropdown', function() {
-            const dropdown = this.nextElementSibling;
-            if (dropdown && dropdown.classList.contains('dropdown-menu')) {
-                // Move dropdown to body to avoid container clipping
-                document.body.appendChild(dropdown);
-                
-                // Position it relative to the toggle button
-                const rect = this.getBoundingClientRect();
-                dropdown.style.position = 'fixed';
-                dropdown.style.top = (rect.bottom + 2) + 'px';
-                dropdown.style.left = rect.left + 'px';
-                dropdown.style.zIndex = '9999';
-            }
-        });
-        
-        toggle.addEventListener('hide.bs.dropdown', function() {
-            const dropdown = document.body.querySelector('.dropdown-menu[style*="position: fixed"]');
-            if (dropdown) {
-                // Move dropdown back to its original position
-                this.parentNode.appendChild(dropdown);
-                dropdown.style.position = '';
-                dropdown.style.top = '';
-                dropdown.style.left = '';
-            }
-        });
-    });
+    // Let Bootstrap handle dropdowns naturally without interference
 });
 
 // Phase management functions
@@ -1511,6 +1617,196 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Enhanced Task movement functions with loading states
+function moveTask(taskId, direction) {
+    const taskRow = document.querySelector(`[data-href*="id=${taskId}"]`);
+    const toolbar = taskRow?.querySelector('.task-actions-toolbar');
+    
+    if (toolbar) {
+        toolbar.classList.add('loading');
+    }
+    
+    // Add visual feedback
+    const moveBtn = event.target.closest('.task-move-btn');
+    if (moveBtn) {
+        moveBtn.style.background = '#e3f2fd';
+        moveBtn.style.color = '#1976d2';
+    }
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.innerHTML = `
+        <input type="hidden" name="action" value="move_task_within_phase">
+        <input type="hidden" name="task_id" value="${taskId}">
+        <input type="hidden" name="direction" value="${direction}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function moveTaskToPhase(taskId, newPhaseId) {
+    // Create and submit form immediately - let Bootstrap handle dropdown closing
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.innerHTML = `
+        <input type="hidden" name="action" value="move_task_to_phase">
+        <input type="hidden" name="task_id" value="${taskId}">
+        <input type="hidden" name="new_phase_id" value="${newPhaseId || ''}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Drag and drop functionality (future enhancement)
+let draggedTaskId = null;
+let draggedFromPhase = null;
+
+function enableTaskDragDrop() {
+    // Add drag and drop to task rows
+    document.querySelectorAll('.clickable-row').forEach(row => {
+        row.draggable = true;
+        
+        row.addEventListener('dragstart', function(e) {
+            draggedTaskId = this.dataset.href.split('=')[1]; // Extract task ID from href
+            draggedFromPhase = this.closest('.phase-section').dataset.phaseId;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        row.addEventListener('dragend', function(e) {
+            this.style.opacity = '1';
+            draggedTaskId = null;
+            draggedFromPhase = null;
+        });
+    });
+    
+    // Add drop zones to phases
+    document.querySelectorAll('.phase-tasks').forEach(phaseArea => {
+        phaseArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        });
+        
+        phaseArea.addEventListener('dragleave', function(e) {
+            this.classList.remove('drag-over');
+        });
+        
+        phaseArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (draggedTaskId) {
+                const targetPhaseSection = this.closest('.phase-section');
+                const targetPhaseId = targetPhaseSection.dataset.phaseId;
+                
+                if (targetPhaseId !== draggedFromPhase) {
+                    moveTaskToPhase(draggedTaskId, targetPhaseId === 'unassigned' ? null : targetPhaseId);
+                }
+            }
+        });
+    });
+}
+
+// Initialize all interactions when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips for better accessibility
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            placement: 'top',
+            trigger: 'hover focus',
+            delay: { show: 500, hide: 100 }
+        });
+    });
+    
+    // Enable drag and drop
+    enableTaskDragDrop();
+    
+    // Add phase IDs to phase sections for drag and drop
+    document.querySelectorAll('.phase-section').forEach((section, index) => {
+        const phaseHeader = section.querySelector('.phase-header h6 strong');
+        if (phaseHeader && phaseHeader.textContent.includes('Unassigned')) {
+            section.dataset.phaseId = 'unassigned';
+        } else {
+            // Try to extract phase ID from buttons in the header
+            const editButton = section.querySelector('[onclick*="editPhase"]');
+            if (editButton) {
+                const match = editButton.getAttribute('onclick').match(/editPhase\((\d+)/);
+                if (match) {
+                    section.dataset.phaseId = match[1];
+                }
+            }
+        }
+    });
+    
+    // Let Bootstrap handle dropdown toggles naturally - don't interfere
+    // Remove any conflicting event listeners
+    
+    // Add smooth scrolling to task links
+    document.querySelectorAll('a[href*="task_view.php"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Add a subtle loading state
+            this.style.opacity = '0.7';
+            this.style.transform = 'scale(0.95)';
+        });
+    });
+    
+    // Add keyboard shortcuts for task movement
+    document.addEventListener('keydown', function(e) {
+        // Only if user is not typing in an input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        const focusedRow = document.querySelector('tr:hover');
+        if (!focusedRow) return;
+        
+        const taskLink = focusedRow.querySelector('a[href*="task_view.php"]');
+        if (!taskLink) return;
+        
+        const taskId = taskLink.href.split('=')[1];
+        
+        // Arrow key shortcuts
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    moveTask(taskId, 'up');
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    moveTask(taskId, 'down');
+                    break;
+            }
+        }
+    });
+    
+    // Add visual feedback for successful operations
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('moved') === 'success') {
+        showTemporaryMessage('Task moved successfully!', 'success');
+    }
+});
+
+// Helper function for temporary messages
+function showTemporaryMessage(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 3000);
+}
 </script>
 
 <style>
@@ -1587,6 +1883,406 @@ code {
     background-color: #f1b0b7;
     border-color: #ea868f;
     color: #491217;
+}
+
+/* ============================================
+   TASK ACTIONS TOOLBAR - MODERN DESIGN
+   ============================================ */
+
+.task-actions-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px;
+    white-space: nowrap;
+}
+
+/* Primary Actions */
+.task-actions-primary {
+    display: flex;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.task-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.task-action-btn:hover {
+    background: #ffffff;
+    color: #495057;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+}
+
+.task-action-view:hover {
+    color: #0d6efd;
+    background: #e7f3ff;
+}
+
+.task-action-edit:hover {
+    color: #6f42c1;
+    background: #f3e5ff;
+}
+
+.task-action-transfer:hover {
+    color: #20c997;
+    background: #e5f9f6;
+}
+
+/* Movement Controls */
+.task-movement-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-reorder-group {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 1px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.task-move-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 16px;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+    font-size: 11px;
+    padding: 0;
+    margin: 0;
+}
+
+.task-move-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.task-move-btn:active {
+    background: #dee2e6;
+    transform: translateY(0);
+}
+
+/* Phase Transfer Dropdown */
+.task-phase-transfer .dropdown-toggle {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.task-phase-transfer .dropdown-toggle::after {
+    font-size: 10px;
+    margin-left: 4px;
+}
+
+/* Simple dropdown z-index fix - just make dropdowns very high */
+.dropdown-menu {
+    z-index: 99999 !important;
+}
+
+/* Remove positioning from table elements to prevent stacking context issues */
+.table tbody tr {
+    position: static !important;
+}
+
+.task-actions-toolbar {
+    position: relative;
+}
+
+.dropdown {
+    position: static;
+}
+
+.task-phase-menu {
+    min-width: 200px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    border-radius: 8px;
+    padding: 4px;
+    margin-top: 4px;
+    z-index: 1060 !important;
+}
+
+.task-phase-menu .dropdown-header {
+    color: #495057;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 12px 4px;
+    margin-bottom: 0;
+}
+
+.task-phase-menu .dropdown-divider {
+    margin: 4px 0;
+    border-color: #e9ecef;
+}
+
+.task-phase-option {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #495057;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    margin: 1px;
+    transition: all 0.15s ease;
+    text-align: left;
+    width: calc(100% - 2px);
+}
+
+.task-phase-option:hover {
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.task-phase-option.current-phase {
+    background: #e7f3ff;
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+.task-phase-option.current-phase:hover {
+    background: #cce7ff;
+}
+
+.task-phase-option i.me-2 {
+    width: 16px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.task-phase-option i.ms-auto {
+    font-size: 14px;
+}
+
+/* Drag and Drop Styling */
+.clickable-row[draggable="true"] {
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.clickable-row[draggable="true"]:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.clickable-row[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.drag-over {
+    background-color: #e3f2fd !important;
+    border: 2px dashed #2196f3 !important;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.phase-tasks {
+    min-height: 60px;
+    transition: all 0.2s ease;
+}
+
+.phase-tasks:empty::before {
+    content: "Drop tasks here or use the move controls";
+    color: #adb5bd;
+    font-style: italic;
+    font-size: 13px;
+    padding: 24px;
+    display: block;
+    text-align: center;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    margin: 12px 0;
+    background: #f8f9fa;
+}
+
+.drag-handle {
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+
+.clickable-row:hover .drag-handle {
+    opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .task-actions-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .task-movement-controls {
+        flex-direction: row-reverse;
+    }
+    
+    .task-reorder-group {
+        flex-direction: row;
+    }
+    
+    .task-move-btn {
+        width: 28px;
+        height: 24px;
+    }
+    
+    .task-phase-menu {
+        min-width: 180px;
+    }
+}
+
+@media (max-width: 576px) {
+    .task-actions-toolbar {
+        gap: 2px;
+    }
+    
+    .task-action-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+    
+    .task-move-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+    }
+}
+
+/* Enhanced Phase Section Styling */
+.phase-section {
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.phase-section:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border-left-color: #0d6efd;
+}
+
+/* Table Row Enhancement */
+.table tbody tr {
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.03);
+    border-left-color: #0d6efd;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.table tbody tr:hover .task-actions-toolbar {
+    opacity: 1;
+}
+
+.task-actions-toolbar {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+/* Enhanced Tooltips */
+[data-bs-toggle="tooltip"] {
+    cursor: help;
+}
+
+/* Action Button States */
+.task-action-btn:focus,
+.task-move-btn:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: 1px;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.task-action-btn:disabled,
+.task-move-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Micro-animations */
+@keyframes subtle-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1px); }
+}
+
+.task-action-btn:active {
+    animation: subtle-bounce 0.2s ease;
+}
+
+/* Loading States */
+.task-actions-toolbar.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.task-actions-toolbar.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0d6efd;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Success/Error Feedback */
+.task-action-success {
+    background: #d1e7dd !important;
+    color: #0f5132 !important;
+    animation: success-flash 0.3s ease;
+}
+
+.task-action-error {
+    background: #f8d7da !important;
+    color: #721c24 !important;
+    animation: error-flash 0.3s ease;
+}
+
+@keyframes success-flash {
+    0% { background-color: #198754; }
+    100% { background-color: #d1e7dd; }
+}
+
+@keyframes error-flash {
+    0% { background-color: #dc3545; }
+    100% { background-color: #f8d7da; }
 }
 </style>
 

@@ -39,7 +39,15 @@ if (!$template) {
     exit;
 }
 
-// Get template tasks
+// Get template tasks grouped by phases
+$templateTasksByPhase = getTemplateTasksByPhase($templateId);
+if ($templateTasksByPhase === false) $templateTasksByPhase = [];
+
+// Get template phases
+$templatePhases = getTemplatePhases($templateId);
+if ($templatePhases === false) $templatePhases = [];
+
+// Also get flat list for backwards compatibility
 $templateTasks = getTemplateTasks($templateId);
 if ($templateTasks === false) $templateTasks = [];
 
@@ -74,6 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'add_template_task':
             $taskData = [
                 'template_id' => $templateId,
+                'phase_id' => $_POST['phase_id'] === '' ? null : intval($_POST['phase_id']),
                 'title' => sanitizeInput($_POST['task_title']),
                 'description' => sanitizeInput($_POST['task_description']),
                 'task_type' => sanitizeInput($_POST['task_type']),
@@ -88,7 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = $result['success'] ? 'success' : 'error';
             
             if ($result['success']) {
-                // Refresh template tasks
+                // Refresh template data
+                $templateTasksByPhase = getTemplateTasksByPhase($templateId);
                 $templateTasks = getTemplateTasks($templateId);
                 if ($templateTasks === false) $templateTasks = [];
             }
@@ -103,7 +113,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'priority' => sanitizeInput($_POST['task_priority']),
                 'estimated_hours' => floatval($_POST['task_estimated_hours']),
                 'order_index' => intval($_POST['order_index']),
-                'days_after_start' => intval($_POST['days_after_start'])
+                'days_after_start' => intval($_POST['days_after_start']),
+                'phase_id' => $_POST['phase_id'] === '' ? null : intval($_POST['phase_id'])
             ];
             
             $result = updateTemplateTask($taskId, $taskData);
@@ -111,7 +122,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = $result['success'] ? 'success' : 'error';
             
             if ($result['success']) {
-                // Refresh template tasks
+                // Refresh template data
+                $templateTasksByPhase = getTemplateTasksByPhase($templateId);
                 $templateTasks = getTemplateTasks($templateId);
                 if ($templateTasks === false) $templateTasks = [];
             }
@@ -124,9 +136,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = $result['success'] ? 'success' : 'error';
             
             if ($result['success']) {
-                // Refresh template tasks
+                // Refresh template data
+                $templateTasksByPhase = getTemplateTasksByPhase($templateId);
                 $templateTasks = getTemplateTasks($templateId);
                 if ($templateTasks === false) $templateTasks = [];
+            }
+            break;
+            
+        case 'move_template_task_within_phase':
+            $taskId = intval($_POST['task_id']);
+            $direction = sanitizeInput($_POST['direction']);
+            $result = moveTemplateTaskWithinPhase($taskId, $direction);
+            $message = $result['message'];
+            $messageType = $result['success'] ? 'success' : 'error';
+            
+            if ($result['success']) {
+                // Refresh template data
+                $templateTasksByPhase = getTemplateTasksByPhase($templateId);
+                $templateTasks = getTemplateTasks($templateId);
+            }
+            break;
+            
+        case 'move_template_task_to_phase':
+            $taskId = intval($_POST['task_id']);
+            $newPhaseId = $_POST['new_phase_id'] === '' ? null : intval($_POST['new_phase_id']);
+            $result = moveTemplateTaskToPhase($taskId, $newPhaseId);
+            $message = $result['message'];
+            $messageType = $result['success'] ? 'success' : 'error';
+            
+            if ($result['success']) {
+                // Refresh template data
+                $templateTasksByPhase = getTemplateTasksByPhase($templateId);
+                $templateTasks = getTemplateTasks($templateId);
+            }
+            break;
+            
+        case 'reorder_template_tasks':
+            $taskIds = $_POST['task_ids'] ?? [];
+            $phaseId = $_POST['phase_id'] === '' ? null : intval($_POST['phase_id']);
+            
+            // Validate task_ids is an array of integers
+            $taskIds = array_map('intval', $taskIds);
+            $taskIds = array_filter($taskIds, function($id) { return $id > 0; });
+            
+            if (!empty($taskIds)) {
+                $result = reorderTemplateTasks($taskIds, $phaseId, $templateId);
+                $message = $result['message'];
+                $messageType = $result['success'] ? 'success' : 'error';
+                
+                if ($result['success']) {
+                    // Refresh template data
+                    $templateTasksByPhase = getTemplateTasksByPhase($templateId);
+                    $templateTasks = getTemplateTasks($templateId);
+                }
+            } else {
+                $message = 'No valid template task IDs provided for reordering';
+                $messageType = 'error';
             }
             break;
     }
@@ -255,74 +320,205 @@ $taskTypes = getTaskTypes();
     </div>
 </div>
 
-<!-- Template Tasks -->
-<div class="card">
+<!-- Work Breakdown Structure Section -->
+<div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-list-task"></i> Template Tasks (<?= count($templateTasks) ?>)</h5>
-        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-            <i class="bi bi-plus-lg"></i> Add Task
+        <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Work Breakdown Structure (<?= count($templateTasks) ?>)</h5>
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPhaseModal">
+            <i class="bi bi-plus-lg"></i> Add Phase
         </button>
     </div>
-    <div class="card-body p-0">
-        <?php if (empty($templateTasks)): ?>
-        <div class="text-center p-5">
-            <i class="bi bi-list-task fs-1 text-muted"></i>
-            <h5 class="text-muted mt-3">No template tasks yet</h5>
-            <p class="text-muted">Add tasks to define what will be created when this template is applied.</p>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                <i class="bi bi-plus-lg"></i> Add First Task
+    <div class="card-body">
+        <?php if (empty($templateTasksByPhase)): ?>
+        <div class="text-center py-4">
+            <i class="bi bi-diagram-3 fs-1 text-muted"></i>
+            <p class="text-muted mt-2">No phases or tasks found for this template</p>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPhaseModal">
+                <i class="bi bi-plus-lg"></i> Create First Phase
             </button>
         </div>
         <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Order</th>
-                        <th>Task</th>
-                        <th>Type</th>
-                        <th>Priority</th>
-                        <th>Hours</th>
-                        <th>Start Day</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($templateTasks as $task): ?>
-                    <tr>
-                        <td>
-                            <span class="badge bg-light text-dark"><?= $task['order_index'] ?></span>
-                        </td>
-                        <td>
-                            <strong><?= htmlspecialchars($task['title']) ?></strong>
-                            <?php if ($task['description']): ?>
-                            <br><small class="text-muted"><?= htmlspecialchars(substr($task['description'], 0, 100)) ?>...</small>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <span class="badge bg-light text-dark border"><?= htmlspecialchars($task['task_type']) ?></span>
-                        </td>
-                        <td><?= getPriorityBadge($task['priority']) ?></td>
-                        <td><?= number_format($task['estimated_hours'], 1) ?>h</td>
-                        <td>Day <?= $task['days_after_start'] ?></td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                        onclick="editTemplateTask(<?= $task['id'] ?>)"
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#editTaskModal">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger" 
-                                        onclick="deleteTemplateTask(<?= $task['id'] ?>, '<?= htmlspecialchars($task['title']) ?>')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+        <div class="wbs-container">
+            <?php 
+            $phaseNumber = 1;
+            foreach ($templateTasksByPhase as $phaseId => $phase): 
+            ?>
+            <div class="phase-section mb-4">
+                <div class="phase-header d-flex justify-content-between align-items-center p-3 bg-light rounded border">
+                    <div class="d-flex align-items-center">
+                        <?php if ($phaseId !== 'no_phase' && is_numeric($phaseId)): ?>
+                        <button class="btn btn-sm btn-outline-secondary me-2 phase-toggle" 
+                                data-phase-id="<?= $phase['phase_id'] ?>"
+                                onclick="toggleTemplatePhase(<?= $phase['phase_id'] ?>)">
+                            <i class="bi bi-chevron-down" id="phase-icon-<?= $phase['phase_id'] ?>"></i>
+                        </button>
+                        <?php else: ?>
+                        <div class="btn btn-sm btn-outline-secondary me-2" style="opacity: 0.3;">
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <?php endif; ?>
+                        <h6 class="mb-0">
+                            <strong><?= htmlspecialchars($phase['phase_name']) ?></strong>
+                            <span class="badge bg-secondary ms-2"><?= count($phase['tasks']) ?> tasks</span>
+                        </h6>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-sm btn-success" 
+                                onclick="setTaskPhase(<?= $phase['phase_id'] === 'no_phase' ? 'null' : $phase['phase_id'] ?>)"
+                                data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                            <i class="bi bi-plus-lg"></i> Add Task
+                        </button>
+                        <?php if ($phaseId !== 'no_phase' && is_numeric($phaseId)): ?>
+                        <button class="btn btn-sm btn-outline-secondary" 
+                                onclick="moveTemplatePhase(<?= $phase['phase_id'] ?>, 'up')"
+                                title="Move Up">
+                            <i class="bi bi-arrow-up"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" 
+                                onclick="moveTemplatePhase(<?= $phase['phase_id'] ?>, 'down')"
+                                title="Move Down">
+                            <i class="bi bi-arrow-down"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="editTemplatePhase(<?= $phase['phase_id'] ?>)"
+                                data-bs-toggle="modal" data-bs-target="#editPhaseModal">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="deleteTemplatePhase(<?= $phase['phase_id'] ?>)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <?php else: ?>
+                        <small class="text-muted ms-2">System Phase</small>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <div class="phase-tasks" id="template-phase-tasks-<?= $phaseId ?>">
+                    <?php if (empty($phase['tasks'])): ?>
+                    <div class="text-center p-4 text-muted">
+                        <i class="bi bi-list-task"></i>
+                        <p class="mb-0">No tasks in this phase</p>
+                    </div>
+                    <?php else: ?>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="5%">WBS</th>
+                                    <th width="35%">Task</th>
+                                    <th width="15%">Type</th>
+                                    <th width="10%">Priority</th>
+                                    <th width="10%">Hours</th>
+                                    <th width="10%">Start Day</th>
+                                    <th width="15%">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="sortable-tbody" data-phase-id="<?= $phase['phase_id'] === 'no_phase' ? '' : $phase['phase_id'] ?>">
+                                <?php 
+                                $taskNumber = 1;
+                                foreach ($phase['tasks'] as $task): 
+                                ?>
+                                <tr class="clickable-row task-row" data-task-id="<?= $task['id'] ?>" data-phase-id="<?= $task['phase_id'] ?? '' ?>" style="cursor: pointer;">
+                                    <td>
+                                        <span class="drag-handle me-1" style="cursor: grab; color: #999;" title="Drag to move">
+                                            <i class="bi bi-grip-vertical" style="font-size: 0.7rem;"></i>
+                                        </span>
+                                        <code><?= $phaseNumber ?>.<?= $taskNumber ?></code>
+                                    </td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($task['title']) ?></strong>
+                                        <?php if ($task['description']): ?>
+                                        <br><small class="text-muted"><?= htmlspecialchars(substr($task['description'], 0, 80)) ?>...</small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border"><?= htmlspecialchars($task['task_type']) ?></span>
+                                    </td>
+                                    <td><?= getPriorityBadge($task['priority']) ?></td>
+                                    <td><?= number_format($task['estimated_hours'], 1) ?>h</td>
+                                    <td>Day <?= $task['days_after_start'] ?></td>
+                                    <td>
+                                        <div class="task-actions-toolbar">
+                                            <!-- Primary Action Buttons -->
+                                            <div class="task-actions-primary">
+                                                <button class="task-action-btn task-action-edit" 
+                                                        onclick="editTemplateTask(<?= $task['id'] ?>)"
+                                                        data-bs-toggle="modal" data-bs-target="#editTaskModal"
+                                                        title="Edit Task">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="task-action-btn task-action-view" 
+                                                        onclick="deleteTemplateTask(<?= $task['id'] ?>, '<?= htmlspecialchars($task['title']) ?>')"
+                                                        title="Delete Task"
+                                                        style="color: #dc3545;">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- Movement Controls -->
+                                            <div class="task-movement-controls">
+                                                <!-- Reorder Buttons -->
+                                                <div class="task-reorder-group">
+                                                    <button class="task-move-btn task-move-up" 
+                                                            onclick="moveTemplateTaskWithinPhase(<?= $task['id'] ?>, 'up')"
+                                                            title="Move Up">
+                                                        <i class="bi bi-chevron-up"></i>
+                                                    </button>
+                                                    <button class="task-move-btn task-move-down" 
+                                                            onclick="moveTemplateTaskWithinPhase(<?= $task['id'] ?>, 'down')"
+                                                            title="Move Down">
+                                                        <i class="bi bi-chevron-down"></i>
+                                                    </button>
+                                                </div>
+                                                
+                                                <!-- Phase Transfer -->
+                                                <div class="dropdown">
+                                                    <button class="task-action-btn dropdown-toggle" 
+                                                            type="button" 
+                                                            data-bs-toggle="dropdown" 
+                                                            data-bs-boundary="clippingParents"
+                                                            data-bs-auto-close="true"
+                                                            aria-expanded="false"
+                                                            title="Move to Different Phase"
+                                                            style="color: #20c997;">
+                                                        <i class="bi bi-layers"></i>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                        <div class="dropdown-header">Move to Phase</div>
+                                                        <div class="dropdown-divider"></div>
+                                                        <?php if ($task['phase_id']): ?>
+                                                        <a class="dropdown-item" href="#" onclick="moveTemplateTaskToPhase(<?= $task['id'] ?>, null)">
+                                                            <i class="bi bi-folder-x text-muted"></i> Unassigned Tasks
+                                                        </a>
+                                                        <?php endif; ?>
+                                                        <?php foreach ($templatePhases as $targetPhase): ?>
+                                                        <?php if ($targetPhase['id'] != $task['phase_id']): ?>
+                                                        <a class="dropdown-item" href="#" onclick="moveTemplateTaskToPhase(<?= $task['id'] ?>, <?= $targetPhase['id'] ?>)">
+                                                            <i class="bi bi-folder2 text-primary"></i> <?= htmlspecialchars($targetPhase['name']) ?>
+                                                        </a>
+                                                        <?php endif; ?>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php 
+                                $taskNumber++;
+                                endforeach; 
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php 
+            $phaseNumber++;
+            endforeach; 
+            ?>
         </div>
         <?php endif; ?>
     </div>
@@ -425,6 +621,16 @@ $taskTypes = getTaskTypes();
                         </div>
                         
                         <div class="col-md-6">
+                            <label for="phase_id" class="form-label">Phase</label>
+                            <select class="form-select" id="phase_id" name="phase_id">
+                                <option value="">Unassigned Tasks</option>
+                                <?php foreach ($templatePhases as $phase): ?>
+                                <option value="<?= $phase['id'] ?>"><?= htmlspecialchars($phase['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
                             <label for="task_type" class="form-label">Task Type</label>
                             <select class="form-select" id="task_type" name="task_type">
                                 <?php foreach ($taskTypes as $type): ?>
@@ -498,6 +704,16 @@ $taskTypes = getTaskTypes();
                         </div>
                         
                         <div class="col-md-6">
+                            <label for="edit_phase_id" class="form-label">Phase</label>
+                            <select class="form-select" id="edit_phase_id" name="phase_id">
+                                <option value="">Unassigned Tasks</option>
+                                <?php foreach ($templatePhases as $phase): ?>
+                                <option value="<?= $phase['id'] ?>"><?= htmlspecialchars($phase['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
                             <label for="edit_task_type" class="form-label">Task Type</label>
                             <select class="form-select" id="edit_task_type" name="task_type">
                                 <?php foreach ($taskTypes as $type): ?>
@@ -546,9 +762,201 @@ $taskTypes = getTaskTypes();
     </div>
 </div>
 
+<style>
+/* Task movement controls styling */
+.task-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.task-row:hover .task-actions {
+    opacity: 1;
+}
+
+.task-actions .btn-group {
+    margin-right: 2px;
+}
+
+.task-actions .dropdown-menu {
+    z-index: 99999 !important;
+}
+
+.task-handle:active {
+    cursor: grabbing !important;
+}
+
+.sortable-tbody {
+    min-height: 50px;
+}
+
+.drag-over {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.task-row.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+}
+
+/* WBS nesting style - tasks indented under phases */
+.phase-tasks {
+    border-left: 2px solid #dee2e6;
+    margin-left: 1rem;
+    padding-left: 1rem;
+    min-height: 60px;
+    transition: all 0.2s ease;
+}
+
+@media (max-width: 768px) {
+    .phase-tasks {
+        margin-left: 0.5rem;
+        padding-left: 0.5rem;
+    }
+}
+
+/* Phase section hover effects */
+.phase-section {
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.phase-section:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border-left-color: #0d6efd;
+}
+
+/* Task row hover effects */
+.table tbody tr {
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.03);
+    border-left-color: #0d6efd;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* WBS code styling */
+code {
+    font-size: 0.8rem;
+    color: #6f42c1;
+    background-color: #f8f9fa;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+}
+
+/* Table cell vertical alignment */
+.table-sm td {
+    padding: 0.5rem 0.25rem;
+    vertical-align: middle;
+}
+
+/* Task Action Button Styles (matching project_view.php) */
+.task-actions-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.task-actions-primary {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.task-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.task-action-btn:hover {
+    background: #ffffff;
+    color: #495057;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+}
+
+.task-action-view:hover {
+    color: #0d6efd;
+    background: #e7f3ff;
+}
+
+.task-action-edit:hover {
+    color: #6f42c1;
+    background: #f3e5ff;
+}
+
+.task-movement-controls {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.task-reorder-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 1px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.task-move-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 16px;
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+    font-size: 11px;
+    padding: 0;
+    margin: 0;
+}
+
+.task-move-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.task-move-btn:active {
+    background: #dee2e6;
+    transform: translateY(0);
+}
+
+/* Show toolbar on row hover */
+.table tbody tr:hover .task-actions-toolbar {
+    opacity: 1;
+}
+</style>
+
 <script>
 // Template task data for edit modal
 const templateTasksData = <?= json_encode($templateTasks) ?>;
+const templatePhasesData = <?= json_encode($templatePhases) ?>;
 
 function editTemplateTask(taskId) {
     const task = templateTasksData.find(t => t.id == taskId);
@@ -558,6 +966,7 @@ function editTemplateTask(taskId) {
     document.getElementById('edit_task_id').value = task.id;
     document.getElementById('edit_task_title').value = task.title;
     document.getElementById('edit_task_description').value = task.description || '';
+    document.getElementById('edit_phase_id').value = task.phase_id || '';
     document.getElementById('edit_task_type').value = task.task_type;
     document.getElementById('edit_task_priority').value = task.priority;
     document.getElementById('edit_task_estimated_hours').value = task.estimated_hours;
@@ -577,6 +986,133 @@ function deleteTemplateTask(taskId, taskTitle) {
         form.submit();
     }
 }
+
+function setTaskPhase(phaseId) {
+    const phaseSelect = document.getElementById('phase_id');
+    if (phaseSelect && phaseId !== null) {
+        phaseSelect.value = phaseId;
+    }
+}
+
+// Template phase toggle function
+function toggleTemplatePhase(phaseId) {
+    const tasksDiv = document.getElementById(`template-phase-tasks-${phaseId}`);
+    const icon = document.getElementById(`phase-icon-${phaseId}`);
+    
+    if (tasksDiv.classList.contains('d-none')) {
+        tasksDiv.classList.remove('d-none');
+        icon.className = 'bi bi-chevron-down';
+    } else {
+        tasksDiv.classList.add('d-none');
+        icon.className = 'bi bi-chevron-right';
+    }
+    
+    // You could add AJAX call here to save the collapsed state
+    // saveTemplatePhaseState(phaseId, tasksDiv.classList.contains('d-none'));
+}
+
+// Template task movement functions
+function moveTemplateTaskWithinPhase(taskId, direction) {
+    // Create and submit form immediately
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.innerHTML = `
+        <input type="hidden" name="action" value="move_template_task_within_phase">
+        <input type="hidden" name="task_id" value="${taskId}">
+        <input type="hidden" name="direction" value="${direction}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function moveTemplateTaskToPhase(taskId, newPhaseId) {
+    // Create and submit form immediately - let Bootstrap handle dropdown closing
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.innerHTML = `
+        <input type="hidden" name="action" value="move_template_task_to_phase">
+        <input type="hidden" name="task_id" value="${taskId}">
+        <input type="hidden" name="new_phase_id" value="${newPhaseId || ''}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Drag and drop functionality for template tasks (future enhancement)
+let draggedTemplateTaskId = null;
+let draggedFromTemplatePhase = null;
+
+function enableTemplateTaskDragDrop() {
+    // Add drag and drop to task rows
+    document.querySelectorAll('.task-row').forEach(row => {
+        row.draggable = true;
+        
+        row.addEventListener('dragstart', function(e) {
+            draggedTemplateTaskId = this.dataset.taskId;
+            draggedFromTemplatePhase = this.dataset.phaseId || null;
+            this.classList.add('dragging');
+            
+            // Set drag effect
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        });
+        
+        row.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+            draggedTemplateTaskId = null;
+            draggedFromTemplatePhase = null;
+        });
+    });
+    
+    // Handle drop zones (table bodies)
+    document.querySelectorAll('.sortable-tbody').forEach(tbody => {
+        tbody.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+        
+        tbody.addEventListener('dragleave', function(e) {
+            this.classList.remove('drag-over');
+        });
+        
+        tbody.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (draggedTemplateTaskId) {
+                const targetPhaseId = this.dataset.phaseId || null;
+                
+                // Only move if dropping on a different phase
+                if (targetPhaseId !== draggedFromTemplatePhase) {
+                    moveTemplateTaskToPhase(draggedTemplateTaskId, targetPhaseId);
+                }
+            }
+        });
+    });
+}
+
+// Template phase management functions (placeholders)
+function moveTemplatePhase(phaseId, direction) {
+    alert('Phase movement functionality coming soon!');
+    // TODO: Implement template phase movement
+}
+
+function editTemplatePhase(phaseId) {
+    alert('Phase editing functionality coming soon!');
+    // TODO: Implement template phase editing modal
+}
+
+function deleteTemplatePhase(phaseId) {
+    if (confirm('Are you sure you want to delete this phase? All tasks in this phase will be moved to unassigned.')) {
+        alert('Phase deletion functionality coming soon!');
+        // TODO: Implement template phase deletion
+    }
+}
+
+// Initialize drag and drop when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    enableTemplateTaskDragDrop();
+});
 </script>
 
 <?php 
